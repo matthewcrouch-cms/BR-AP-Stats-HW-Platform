@@ -54,6 +54,10 @@
   .chip{display:inline-block;font-size:.78rem;font-weight:700;padding:2px 9px;border-radius:99px;vertical-align:1px;margin-left:6px}
   .chip.open{background:var(--blue-lt);color:var(--blue-dk)} .chip.late{background:var(--orange-lt);color:#B34A00}
   .chip.closed{background:#EEF1F4;color:var(--muted)} .chip.upcoming{background:#EEF1F4;color:var(--muted)}
+  .group{border:2px solid var(--blue);border-radius:16px;padding:12px;background:var(--blue-lt)}
+  .ghead{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:2px 6px 10px}
+  .ghead b{font-size:1.08rem;color:var(--blue-dk)} .ghead small{display:block;color:var(--muted);font-weight:600}
+  .gscore{text-align:right;min-width:78px} .gscore b{font-size:1.35rem;display:block;color:var(--ink)} .gscore small{color:var(--muted)}
   .chip.done{background:var(--good-lt);color:var(--good)} .chip.tag{background:#F1ECFA;color:#5B3A99}
 
   /* Assignment view */
@@ -313,11 +317,26 @@ function statusChip(a) {
   return { open:`<span class="chip open">Open</span>`, late:`<span class="chip late">Late</span>`,
            closed:`<span class="chip closed">Closed</span>`, upcoming:`<span class="chip upcoming">Not open yet</span>` }[a.status] || "";
 }
+const isInf = t => !t || t === "infinity";
+const pastTarget = a => a.status === "open" && a.due && a.due !== "infinity" && new Date(a.due) < new Date();
 function dueLine(a) {
   if (a.status === "upcoming") return `Opens ${fmtDate(a.opens)}`;
   if (a.status === "closed") return `Closed ${fmtDate(a.closes)}`;
-  if (a.status === "late") return `Was due ${fmtDate(a.due)} · −2% per school day late · closes ${fmtDate(a.closes)}`;
-  return `Due ${fmtDate(a.due)} at ${fmtTime(a.due)}`;
+  if (a.status === "late") return `Was due ${fmtDate(a.penalty_due || a.due)} · −2% per school day late · closes ${fmtDate(a.closes)}`;
+  if (isInf(a.due)) return "Open";
+  if (pastTarget(a)) return `Target was ${fmtDate(a.due)} · ${isInf(a.penalty_due) ? "no late penalty yet" : `no late penalty until ${fmtDate(a.penalty_due)} at ${fmtTime(a.penalty_due)}`}`;
+  return `Due ${fmtDate(a.due)} at ${fmtTime(a.due)}${a.group_id && !isInf(a.penalty_due) && a.penalty_due !== a.due ? ` · late penalty starts after ${fmtDate(a.penalty_due)}` : ""}`;
+}
+function acard(a) {
+  return `<button class="acard" data-id="${a.id}" ${a.status === "upcoming" ? "disabled" : ""}>
+        <div class="main">
+          <div class="title">${esc(a.title)} ${statusChip(a)}</div>
+          <div class="meta">${dueLine(a)}</div>
+          <div class="bar"><i style="width:${a.parts ? (100 * a.done / a.parts) : 0}%"></i></div>
+          <div class="meta">${a.done} of ${a.parts} questions finished</div>
+        </div>
+        <div class="score"><b>${fmt(a.score)}</b><small>/ 100</small></div>
+      </button>`;
 }
 
 async function showList() {
@@ -329,20 +348,23 @@ async function showList() {
   who.innerHTML = `<span>${esc(d.name)}${d.is_test ? "" : ` · ${esc(d.section)}`}</span><button class="linkbtn" id="lo">Log out</button>`;
   document.getElementById("lo").onclick = logout;
   const list = [...d.assignments].sort((a, b) => (b.sort - a.sort));
+  // Lessons in the same grade group are shown together with their combined grade (average of the lessons)
+  const blocks = [], seen = {};
+  for (const a of list) {
+    if (!a.group_id) { blocks.push({ one: a }); continue; }
+    if (!seen[a.group_id]) { seen[a.group_id] = { name: a.group_name, items: [] }; blocks.push(seen[a.group_id]); }
+    seen[a.group_id].items.push(a);
+  }
   app.innerHTML = `
     ${d.is_test ? `<div class="banner">Teacher preview: you're the hidden Test Student. Every assignment is open, and nothing here counts.</div>` : ""}
     <h1>Your homework</h1>
-    <p class="sub">Each assignment is worth 100 points.</p>
-    <div class="alist">${list.map(a => `
-      <button class="acard" data-id="${a.id}" ${a.status === "upcoming" ? "disabled" : ""}>
-        <div class="main">
-          <div class="title">${esc(a.title)} ${statusChip(a)}</div>
-          <div class="meta">${dueLine(a)}</div>
-          <div class="bar"><i style="width:${a.parts ? (100 * a.done / a.parts) : 0}%"></i></div>
-          <div class="meta">${a.done} of ${a.parts} questions finished</div>
-        </div>
-        <div class="score"><b>${fmt(a.score)}</b><small>/ 100</small></div>
-      </button>`).join("") || `<p class="center">No homework yet.</p>`}
+    <p class="sub">Each lesson is worth 100 points. Lessons in a group are averaged into one grade.</p>
+    <div class="alist">${blocks.map(b => b.one ? acard(b.one) : `
+      <div class="group">
+        <div class="ghead"><div><b>${esc(b.name)}</b><small>${b.items.length} lesson${b.items.length > 1 ? "s" : ""} · averaged into one grade</small></div>
+          <div class="gscore"><b>${fmt(b.items.reduce((t, a) => t + Number(a.score), 0) / b.items.length)}</b><small>/ 100</small></div></div>
+        <div class="alist">${b.items.map(acard).join("")}</div>
+      </div>`).join("") || `<p class="center">No homework yet.</p>`}
     </div>`;
   app.querySelectorAll(".acard").forEach(b => b.onclick = () => showAssignment(b.dataset.id));
 }
@@ -369,9 +391,9 @@ function replacePart(newPart) {
 function renderAssignment() {
   const a = state.assignment;
   const closed = a.status === "closed";
-  const sub = a.status === "late" ? `Late · was due ${fmtDate(a.due)} · closes ${fmtDate(a.closes)}`
+  const sub = a.status === "late" ? `Late · was due ${fmtDate(a.penalty_due || a.due)} · closes ${fmtDate(a.closes)}`
             : closed ? `Closed ${fmtDate(a.closes)} · answers shown below`
-            : `Due ${fmtDate(a.due)} at ${fmtTime(a.due)}`;
+            : dueLine(a) + (a.group_name ? ` · ${esc(a.group_name)}` : "");
   app.innerHTML = `
     <div class="topbar">
       <button class="back" id="back">← All homework</button>
