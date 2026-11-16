@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AP Stats Homework · Teacher</title>
+<style>
+  :root{
+    --blue:#4B9CD3; --blue-dk:#1F6FA8; --blue-lt:#EAF4FB; --orange:#F56600; --orange-lt:#FFF1E6;
+    --ink:#1B2733; --muted:#5B6B7A; --line:#DCE6EE; --bg:#F5F8FB; --card:#fff;
+    --good:#1E8E3E; --good-lt:#E7F5EB; --bad:#C62828; --bad-lt:#FDECEC; --warn:#9A5B00; --warn-lt:#FFF6DD;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.45}
+  button,input,select,textarea{font:inherit}
+  button{cursor:pointer}
+  header{background:var(--blue);color:#fff;padding:12px 20px;display:flex;align-items:center;gap:16px;border-bottom:4px solid var(--orange);flex-wrap:wrap}
+  header .brand{font-weight:800;font-size:1.1rem}
+  header .brand small{font-weight:600;opacity:.85;margin-left:6px}
+  nav{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+  nav button{background:transparent;border:none;color:#fff;padding:7px 12px;border-radius:8px;font-weight:700;opacity:.85}
+  nav button.on{background:#fff;color:var(--blue-dk);opacity:1}
+  .hbtn{background:var(--orange);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-weight:700}
+  main{max-width:1280px;margin:0 auto;padding:22px 16px 80px}
+  h1{font-size:1.35rem;margin:0 0 4px} h2{font-size:1.1rem;margin:0 0 10px}
+  .sub{color:var(--muted);margin:0 0 16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+  .err{background:var(--bad-lt);color:var(--bad);padding:10px 14px;border-radius:10px;margin:10px 0;font-weight:600}
+  .ok{background:var(--good-lt);color:var(--good);padding:10px 14px;border-radius:10px;margin:10px 0;font-weight:600}
+  .btn{background:var(--blue-dk);color:#fff;border:none;border-radius:9px;padding:8px 16px;font-weight:700}
+  .btn.alt{background:#fff;color:var(--blue-dk);border:1.5px solid var(--blue)}
+  .btn.warn{background:#fff;color:var(--bad);border:1.5px solid #E7A3A3}
+  .btn.sm{padding:4px 10px;font-size:.85rem}
+  .btn:disabled{opacity:.5;cursor:default}
+  input[type=password],input[type=text],input[type=date],input[type=datetime-local],select,textarea{border:1.5px solid #AFC2D1;border-radius:8px;padding:6px 9px;background:#fff}
+  input.dirty{border-color:var(--orange);background:var(--orange-lt)}
+  .login{max-width:360px;margin:60px auto;text-align:center}
+  .login input{width:100%;margin:12px 0}
+  .scroll{overflow-x:auto}
+  table.t{border-collapse:collapse;width:100%;background:#fff}
+  table.t th,table.t td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:middle}
+  table.t th{background:#F0F5F9;font-size:.8rem;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);position:sticky;top:0;z-index:1}
+  table.t td.c,table.t th.c{text-align:center}
+  table.t td.sticky,table.t th.sticky{position:sticky;left:0;background:#fff;z-index:2}
+  table.t th.sticky{background:#F0F5F9;z-index:3}
+  .cell{border:1px solid transparent;border-radius:8px;padding:5px 8px;min-width:70px;background:none;text-align:center;width:100%}
+  .cell:hover{border-color:var(--blue);background:var(--blue-lt)}
+  .cell b{display:block;font-size:1.02rem}
+  .cell small{color:var(--muted);font-size:.75rem}
+  .s-hi b{color:var(--good)} .s-mid b{color:#B36B00} .s-lo b{color:var(--bad)} .s-none b{color:#A9B6C2}
+  .tag{display:inline-block;font-size:.72rem;font-weight:700;padding:1px 7px;border-radius:99px;background:var(--orange-lt);color:#B34A00;margin-left:4px}
+  .tag.ext{background:#F1ECFA;color:#5B3A99} .tag.sec{background:var(--blue-lt);color:var(--blue-dk)} .tag.sp{background:#F1ECFA;color:#5B3A99}
+  .pin{font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:700;letter-spacing:2px;font-size:1.05rem}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .mutedtxt{color:var(--muted);font-size:.88rem}
+  .meter{height:8px;background:var(--line);border-radius:9px;overflow:hidden;min-width:90px}
+  .meter i{display:block;height:100%}
+  .overlay{position:fixed;inset:0;background:rgba(15,30,45,.45);display:flex;justify-content:center;align-items:flex-start;padding:40px 16px;z-index:20;overflow-y:auto}
+  .modal{background:#fff;border-radius:16px;max-width:820px;width:100%;padding:20px 22px;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+  .modal h2{display:flex;justify-content:space-between;gap:10px}
+  .x{background:none;border:none;font-size:1.4rem;line-height:1;color:var(--muted)}
+  .good{color:var(--good);font-weight:700} .bad{color:var(--bad);font-weight:700}
+  textarea{width:100%;min-height:150px}
+  .seg{display:inline-flex;border:1.5px solid var(--blue);border-radius:9px;overflow:hidden}
+  .seg button{background:#fff;border:none;padding:6px 12px;font-weight:700;color:var(--blue-dk)}
+  .seg button.on{background:var(--blue-dk);color:#fff}
+  .grp{background:#FAFCFE}
+  .wa{background:#FAFCFE;font-size:.9rem}
+  .wa code{background:#EEF3F7;border-radius:5px;padding:1px 6px}
+  .slips{display:none}
+  @media print{
+    body *{visibility:hidden} .slips,.slips *{visibility:visible}
+    .slips{display:grid!important;position:absolute;left:0;top:0;width:100%;grid-template-columns:1fr 1fr;gap:0}
+    .slip{border:1px dashed #999;padding:14px 16px;break-inside:avoid;font-size:14px}
+    .slip b{font-size:16px} .slip .pin{font-size:22px}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">BR: AP Statistics <small>Homework · Teacher View</small></div>
+  <nav id="nav"></nav>
+</header>
+<main id="app"></main>
+<div class="slips" id="slips"></div>
+
+<script>
+// ====== SETTINGS ======
+const SUPABASE_URL = "https://hfanndrvacddqvrvgmqe.supabase.co";
+const SUPABASE_KEY = "sb_publishable_VElC8kqy_TL2yWPz7O33iQ_vQQaifXQ";
+// ======================
+
+const app = document.getElementById("app"), nav = document.getElementById("nav");
+const ss = { get(k){ try { return sessionStorage.getItem(k); } catch(e){ return null; } },
+             set(k,v){ try { sessionStorage.setItem(k,v); } catch(e){} },
+             del(k){ try { sessionStorage.removeItem(k); } catch(e){} } };
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const r1 = n => (Math.round(Number(n) * 10) / 10);
+const TZ = "America/New_York";
+const fmtDT = iso => iso ? new Date(iso).toLocaleString("en-US", { weekday:"short", month:"numeric", day:"numeric", hour:"numeric", minute:"2-digit", timeZone:TZ }) : "";
+const fmtD = iso => iso ? new Date(iso).toLocaleDateString("en-US", { weekday:"short", month:"numeric", day:"numeric", timeZone:TZ }) : "";
+const plain = html => String(html || "").replace(/<[^>]+>/g, "").replace(/&[a-z]+;/g, " ");
+
+async function rpc(fn, args = {}) {
+  let r;
+  try { r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, { method:"POST",
+        headers:{ apikey:SUPABASE_KEY, "Content-Type":"application/json" }, body:JSON.stringify(args) }); }
+  catch (e) { throw new Error("Can't reach the server. Check your internet connection."); }
+  const data = await r.json().catch(() => null);
+  if (!r.ok || (data && data.error)) throw new Error((data && (data.error || data.message)) || "Error " + r.status);
+  return data;
+}
+
+const S = { pw: ss.get("aps_tpw"), data: null, tab: "grades", insightA: null, sec: ss.get("aps_tsec") || "all", unit: null, waPart: null };
+
+// ---------------- LOGIN ----------------
+function showLogin(msg) {
+  nav.innerHTML = "";
+  app.innerHTML = `<div class="card login">
+    <h1>Teacher login</h1>
+    <input type="password" id="pw" placeholder="Teacher password" autofocus>
+    <button class="btn" id="go" style="width:100%">Log in</button>
+    <div id="lerr">${msg ? `<div class="err">${esc(msg)}</div>` : ""}</div></div>`;
+  const go = async () => {
+    const pw = document.getElementById("pw").value;
+    try { S.data = await rpc("aps_teacher_data", { p_password: pw }); S.pw = pw; ss.set("aps_tpw", pw); render(); }
+    catch (e) { document.getElementById("lerr").innerHTML = `<div class="err">${esc(e.message)}</div>`; }
+  };
+  document.getElementById("go").onclick = go;
+  document.getElementById("pw").onkeydown = e => { if (e.key === "Enter") go(); };
+}
+
+async function refresh() {
+  try { S.data = await rpc("aps_teacher_data", { p_password: S.pw }); }
+  catch (e) { ss.del("aps_tpw"); return showLogin(e.message); }
+  render();
+}
+
+// ---------------- DATA HELPERS ----------------
+function stateMap() { const m = {}; for (const s of S.data.states) m[s.s + "|" + s.p] = s; return m; }
+function extFor(sid, aid) { return S.data.extensions.find(e => e.s === sid && e.a === aid); }
+function summary(student, a, sm) {
+  let score = 0, done = 0, late = 0, started = 0;
+  for (const p of a.parts) { const st = sm[student.id + "|" + p.id];
+    if (st) { started++; score += Number(st.score); if (st.done) done++; if (st.late) late = Math.max(late, st.late); } }
+  return { score: r1(score), done, late, started, total: a.parts.length };
+}
+const inSec = s => S.sec === "all" || s.section === S.sec;
+const activeStudents = () => S.data.students.filter(s => s.active && inSec(s));
+const units = () => [...new Set(S.data.assignments.map(a => a.unit))];
+const shortLabel = a => "L" + a.lesson;
+const shortTitle = a => `U${a.unit} L${a.lesson} HW: ` + a.title.replace(/^.*?:\s*/, "");
+const secsOfDay = d => S.data.sections.filter(s => s.day === d).map(s => s.id);
+function secPicker(id = "secpick") {
+  return `<select id="${id}"><option value="all">All sections</option>${S.data.sections.map(s =>
+    `<option value="${esc(s.id)}" ${S.sec === s.id ? "selected" : ""}>${esc(s.id)} (${esc(s.day)}-day)</option>`).join("")}</select>`;
+}
+function wireSecPicker(cb) {
+  const el = document.getElementById("secpick");
+  if (el) { el.value = S.sec; el.onchange = () => { S.sec = el.value; ss.set("aps_tsec", S.sec); cb(); }; }
+}
+function unitPicker() {
+  const us = units(); if (!S.unit || !us.includes(S.unit)) S.unit = us[us.length - 1] || null;
+  return us.length > 1 ? `<select id="unitpick">${us.map(u => `<option value="${esc(u)}" ${u === S.unit ? "selected" : ""}>Unit ${esc(u)}</option>`).join("")}</select>` : "";
+}
+function wireUnitPicker(cb) { const el = document.getElementById("unitpick"); if (el) el.onchange = () => { S.unit = el.value; cb(); }; }
+
+// ---------------- LAYOUT ----------------
+function render() {
+  const tabs = [["grades","Gradebook"],["insights","Question insights"],["schedule","Schedule"],["roster","Roster & PINs"],["export","Export to Canvas"]];
+  nav.innerHTML = tabs.map(([k,l]) => `<button class="${S.tab===k?"on":""}" data-t="${k}">${l}</button>`).join("")
+    + `<button class="hbtn" id="preview">👁 Preview as student</button>`;
+  nav.querySelectorAll("[data-t]").forEach(b => b.onclick = () => { S.tab = b.dataset.t; render(); });
+  document.getElementById("preview").onclick = preview;
+  ({ grades: renderGrades, insights: renderInsights, schedule: renderSchedule, roster: renderRoster, export: renderExport })[S.tab]();
+}
+
+async function preview() {
+  try {
+    const r = await rpc("aps_teacher_preview", { p_password: S.pw, p_reset: false });
+    try { localStorage.setItem("aps_token", r.token); } catch (e) {}
+    window.open("index.html", "_blank");
+  } catch (e) { alertBox(e.message); }
+}
+
+function alertBox(msg, good) {
+  const d = document.createElement("div"); d.className = good ? "ok" : "err"; d.textContent = msg;
+  app.prepend(d); setTimeout(() => d.remove(), 5000);
+}
+
+// ---------------- GRADEBOOK ----------------
+function renderGrades() {
+  const st = activeStudents(), sm = stateMap();
+  const up = unitPicker();
+  const as = S.data.assignments.filter(a => a.unit === S.unit);
+  app.innerHTML = `
+    <div class="row" style="justify-content:space-between"><div><h1>Gradebook</h1>
+      <p class="sub">Scores out of 100 update live as students work. Click any score for question-by-question detail, an extension, or a reset.</p></div>
+      <div class="row">${secPicker()}${up}<button class="btn alt" id="rf">↻ Refresh</button></div></div>
+    ${!st.length ? `<div class="card">No students in this section yet. Add them on the <b>Roster & PINs</b> tab.</div>` :
+    `<div class="card scroll" style="padding:0;max-height:75vh"><table class="t">
+      <tr><th class="sticky">Student</th>${S.sec === "all" ? "<th>Sec</th>" : ""}${as.map(a => {
+          const d = a.dates[S.sec === "all" ? (st[0] && st[0].section) : S.sec];
+          return `<th class="c" title="${esc(a.title)}">${esc(shortLabel(a))}<br><span style="text-transform:none;font-weight:500">${d ? "due " + fmtD(d.due) : "not scheduled"}</span></th>`; }).join("")}
+        <th class="c">Avg</th></tr>
+      ${st.map(s => { let tot = 0, n = 0;
+        const cells = as.map(a => {
+          const x = summary(s, a, sm), ext = extFor(s.id, a.id), sched = !!a.dates[s.section];
+          if (sched) { tot += x.score; n++; }
+          const cls = !x.started ? "s-none" : x.score >= 80 ? "s-hi" : x.score >= 60 ? "s-mid" : "s-lo";
+          return `<td class="c"><button class="cell ${cls}" data-s="${s.id}" data-a="${a.id}">
+            <b>${x.started ? x.score : (sched ? "—" : "·")}</b><small>${x.done}/${x.total} done</small>
+            ${x.late ? `<span class="tag">late</span>` : ""}${ext ? `<span class="tag ext">ext</span>` : ""}</button></td>`; }).join("");
+        return `<tr><td class="sticky"><b>${esc(s.last)}</b>, ${esc(s.first)}</td>${S.sec === "all" ? `<td><span class="tag sec">${esc(s.section)}</span></td>` : ""}${cells}
+          <td class="c"><b>${n ? r1(tot / n) : "—"}</b></td></tr>`; }).join("")}
+    </table></div>
+    <p class="mutedtxt">Avg counts every assignment scheduled for that student's section (unfinished work counts as 0). "·" means not scheduled for that section yet.</p>`}`;
+  document.getElementById("rf").onclick = refresh;
+  wireSecPicker(renderGrades); wireUnitPicker(renderGrades);
+  app.querySelectorAll(".cell").forEach(b => b.onclick = () => detail(+b.dataset.s, b.dataset.a));
+}
+
+function toLocalInput(iso) {
+  if (!iso) return "";
+  const d = new Date(iso); const p = n => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+function detail(sid, aid) {
+  const s = S.data.students.find(x => x.id === sid), a = S.data.assignments.find(x => x.id === aid), sm = stateMap();
+  const ext = extFor(sid, aid), x = summary(s, a, sm), d = a.dates[s.section];
+  const ov = document.createElement("div"); ov.className = "overlay";
+  ov.innerHTML = `<div class="modal">
+    <h2><span>${esc(s.first)} ${esc(s.last)} (${esc(s.section)}) · ${esc(a.title)}</span><button class="x" id="cl">×</button></h2>
+    <p class="sub">Score: <b>${x.score}</b> / 100 · ${x.done} of ${x.total} questions finished</p>
+    <div class="scroll"><table class="t"><tr><th>Question</th><th>Result</th><th class="c">Wrong tries</th><th class="c">Hint used</th><th class="c">Late days</th><th class="c">Points</th><th>Last activity</th></tr>
+    ${a.parts.map(p => { const st = sm[sid + "|" + p.id];
+      const res = !st ? `<span class="mutedtxt">not started</span>` : st.done ? (st.correct ? `<span class="good">✓ correct</span>` : `<span class="bad">✗ out of tries</span>`) : `<span class="mutedtxt">in progress</span>`;
+      return `<tr><td>${p.problem}${esc(p.label)}${p.tag ? ` <span class="tag sp">spiral</span>` : ""}</td><td>${res}</td><td class="c">${st ? st.wrong : ""}</td>
+        <td class="c">${st && st.hint ? "Hint " + st.hint : ""}</td><td class="c">${st && st.late ? st.late : ""}</td>
+        <td class="c">${st ? r1(st.score) : 0} / ${r1(p.points)}</td><td class="mutedtxt">${st ? fmtDT(st.at) : ""}</td></tr>`; }).join("")}
+    </table></div>
+    <div class="card" style="margin-top:16px;background:#FAFCFE">
+      <h2>Extension</h2>
+      ${d ? `<p class="mutedtxt" style="margin-top:-6px">${esc(s.section)} due date: ${fmtDT(d.due)} · closes ${fmtDT(d.closes)}. An extension moves both for this student only, and late penalties are recalculated.</p>
+      <div class="row">
+        <label>New due <input type="datetime-local" id="ed" value="${toLocalInput(ext ? ext.due : d.due)}"></label>
+        <label>Closes <input type="datetime-local" id="ec" value="${toLocalInput(ext ? ext.closes : d.closes)}"></label>
+        <button class="btn" id="es">Save extension</button>
+        ${ext ? `<button class="btn alt" id="er">Remove extension</button>` : ""}
+      </div>` : `<p class="mutedtxt">This assignment isn't scheduled for ${esc(s.section)} yet. Set dates on the Schedule tab first.</p>`}
+    </div>
+    <div class="row" style="justify-content:space-between">
+      <span class="mutedtxt">Reset clears this student's answers, hints, and score on this assignment so they can start over.</span>
+      <span id="rs"><button class="btn warn" id="rw">Reset work…</button></span>
+    </div>
+    <div id="merr"></div>
+  </div>`;
+  document.body.appendChild(ov);
+  const close = () => ov.remove();
+  ov.querySelector("#cl").onclick = close;
+  ov.onclick = e => { if (e.target === ov) close(); };
+  const err = m => ov.querySelector("#merr").innerHTML = `<div class="err">${esc(m)}</div>`;
+  const es = ov.querySelector("#es");
+  if (es) es.onclick = async () => {
+    const dd = ov.querySelector("#ed").value, c = ov.querySelector("#ec").value;
+    if (!dd) return err("Pick a due date.");
+    try { await rpc("aps_teacher_extension", { p_password: S.pw, p_student: sid, p_assignment: aid,
+            p_due: new Date(dd).toISOString(), p_closes: new Date(c || dd).toISOString() });
+          close(); await refresh(); alertBox("Extension saved.", true); } catch (e) { err(e.message); }
+  };
+  const er = ov.querySelector("#er");
+  if (er) er.onclick = async () => {
+    try { await rpc("aps_teacher_extension", { p_password: S.pw, p_student: sid, p_assignment: aid, p_due: null, p_closes: null });
+          close(); await refresh(); alertBox("Extension removed.", true); } catch (e) { err(e.message); }
+  };
+  ov.querySelector("#rw").onclick = () => {
+    ov.querySelector("#rs").innerHTML = `<b class="bad">Erase all of ${esc(s.first)}'s work here?</b>
+      <button class="btn warn" id="ry">Yes, reset</button> <button class="btn alt" id="rn">Cancel</button>`;
+    ov.querySelector("#rn").onclick = () => { close(); detail(sid, aid); };
+    ov.querySelector("#ry").onclick = async () => {
+      try { await rpc("aps_teacher_reset_work", { p_password: S.pw, p_student: sid, p_assignment: aid });
+            close(); await refresh(); alertBox("Work reset.", true); } catch (e) { err(e.message); }
+    };
+  };
+}
+
+// ---------------- INSIGHTS ----------------
+function showAns(v, part) {
+  if (v == null) return "";
+  if (typeof v === "string") return `<code>${esc(v)}</code>`;
+  if (Array.isArray(v)) return v.map(x => Array.isArray(x) ? `<code>(${esc(x.join(", "))})</code>` : `<code>${esc(x)}</code>`).join(" ");
+  if (typeof v === "object") return Object.entries(v).map(([k, x]) => `<code>${esc(k)} → ${esc(x)}</code>`).join(" ");
+  return `<code>${esc(v)}</code>`;
+}
+function renderInsights() {
+  const as = S.data.assignments; if (!as.length) { app.innerHTML = `<div class="card">No assignments yet.</div>`; return; }
+  if (!S.insightA || !as.find(a => a.id === S.insightA)) S.insightA = as[as.length - 1].id;
+  const a = as.find(x => x.id === S.insightA), ids = new Set(activeStudents().map(s => s.id));
+  const rows = a.parts.map(p => {
+    const sts = S.data.states.filter(s => s.p === p.id && ids.has(s.s));
+    const done = sts.filter(s => s.done), correct = done.filter(s => s.correct);
+    const first = correct.filter(s => s.wrong === 0 && s.hint === 0).length;
+    const hinted = sts.filter(s => s.hint > 0);
+    const avgWrong = sts.length ? sts.reduce((t, s) => t + s.wrong, 0) / sts.length : 0;
+    const out = done.length - correct.length;
+    const struggle = sts.length ? (hinted.length + sts.filter(s => s.wrong >= 2).length + out * 2) / sts.length : 0;
+    return { p, n: sts.length, first, hinted: hinted.length,
+             t: [1,2,3].map(k => sts.filter(s => s.hint === k).length), avgWrong, out, struggle };
+  });
+  const maxS = Math.max(0.0001, ...rows.map(r => r.struggle));
+  app.innerHTML = `
+    <div class="row" style="justify-content:space-between"><div><h1>Question insights</h1>
+      <p class="sub">Which questions needed the most help? Click a question to see the most common wrong answers (all sections).</p></div>
+      <div class="row">${secPicker()}<select id="as">${as.map(x => `<option value="${x.id}" ${x.id===a.id?"selected":""}>${esc(x.title)}</option>`).join("")}</select>
+      <button class="btn alt" id="rf">↻ Refresh</button></div></div>
+    <div class="card scroll" style="padding:0"><table class="t">
+      <tr><th>Question</th><th>CED topic</th><th class="c">Started</th><th class="c">Right first try<br><span style="text-transform:none;font-weight:500">no hints</span></th>
+        <th class="c">Avg wrong tries</th><th class="c">Used a hint</th><th class="c">Deepest hint<br><span style="text-transform:none;font-weight:500">1 · 2 · 3</span></th>
+        <th class="c">Out of tries</th><th>Struggle level</th></tr>
+      ${rows.map(r => `<tr data-p="${esc(r.p.id)}" style="cursor:pointer" title="Click to see common wrong answers"><td><b>${r.p.problem}${esc(r.p.label)}</b>${r.p.tag ? ` <span class="tag sp">spiral</span>` : ""}</td>
+        <td class="mutedtxt">${esc((r.p.ced || "").split(" ")[0])}</td>
+        <td class="c">${r.n}</td>
+        <td class="c">${r.n ? Math.round(100 * r.first / r.n) + "%" : "—"}</td>
+        <td class="c">${r.n ? r.avgWrong.toFixed(1) : "—"}</td>
+        <td class="c">${r.hinted}</td>
+        <td class="c">${r.t.join(" · ")}</td>
+        <td class="c">${r.out ? `<span class="bad">${r.out}</span>` : 0}</td>
+        <td><div class="meter"><i style="width:${100 * r.struggle / maxS}%;background:${r.struggle / maxS > .66 ? "var(--bad)" : r.struggle / maxS > .33 ? "var(--orange)" : "var(--blue)"}"></i></div></td></tr>
+        ${S.waPart === r.p.id ? `<tr class="wa"><td colspan="9" id="wa">Loading…</td></tr>` : ""}`).join("")}
+    </table></div>
+    <p class="mutedtxt">Struggle level combines hint use, repeated wrong tries, and running out of tries. It's relative to the other questions in this assignment.</p>`;
+  document.getElementById("as").onchange = e => { S.insightA = e.target.value; S.waPart = null; renderInsights(); };
+  document.getElementById("rf").onclick = refresh;
+  wireSecPicker(renderInsights);
+  app.querySelectorAll("tr[data-p]").forEach(tr => tr.onclick = () => { S.waPart = S.waPart === tr.dataset.p ? null : tr.dataset.p; renderInsights(); });
+  if (S.waPart) {
+    const p = a.parts.find(x => x.id === S.waPart);
+    rpc("aps_teacher_wrong_answers", { p_password: S.pw, p_part: S.waPart }).then(list => {
+      const el = document.getElementById("wa"); if (!el) return;
+      el.innerHTML = `<div style="margin-bottom:6px"><b>${p.problem}${esc(p.label)}.</b> ${esc(plain(p.prompt)).slice(0, 220)}</div>` +
+        (list.length ? `<b>Most common wrong answers:</b> ` + list.map(w => `${showAns(w.answer, p)} ×${w.n}`).join(" &nbsp; ") : "No wrong answers yet.");
+    }).catch(e => { const el = document.getElementById("wa"); if (el) el.textContent = e.message; });
+  }
+}
+
+// ---------------- SCHEDULE ----------------
+const isoDay = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const localDay = iso => iso ? new Date(iso).toLocaleDateString("en-CA", { timeZone: TZ }) : "";
+function noSchoolSet() { return new Set(S.data.no_school.map(n => n.day)); }
+function isSchoolDay(ds, ns) { const d = new Date(ds + "T12:00"); const w = d.getDay(); return w !== 0 && w !== 6 && !ns.has(ds); }
+function addSchoolDays(ds, n) {
+  const ns = noSchoolSet(); let d = new Date(ds + "T12:00"), k = 0;
+  while (k < n) { d.setDate(d.getDate() + 1); if (isSchoolDay(isoDay(d), ns)) k++; }
+  return isoDay(d);
+}
+const at7 = ds => new Date(ds + "T07:00").toISOString();
+
+function renderSchedule() {
+  const up = unitPicker();
+  const as = S.data.assignments.filter(a => a.unit === S.unit);
+  const groups = ["A", "B"].map(day => ({ day, secs: secsOfDay(day) })).filter(g => g.secs.length);
+  const testFor = (g) => { const t = S.data.unit_tests.find(u => u.unit === S.unit && u.section === g.secs[0]); return t ? t.date : ""; };
+  app.innerHTML = `
+    <div class="row" style="justify-content:space-between"><div><h1>Schedule</h1>
+      <p class="sub">Enter the day you teach each lesson. Homework opens at 7:00 AM that day and is due at <b>7:00 AM on the next class day</b> (2 school days later on the A/B rotation). Change any due date if needed.</p></div>
+      <div class="row">${up}<button class="btn alt" id="rf">↻ Refresh</button></div></div>
+    <div class="card scroll" style="padding:0"><table class="t">
+      <tr><th>Lesson</th>${groups.map(g => `<th class="grp">${g.day}-day (${g.secs.join(", ")})<br><span style="text-transform:none;font-weight:500">Taught · Due 7 AM · Closes</span></th>`).join("")}</tr>
+      ${as.map(a => `<tr><td><b>${esc(shortLabel(a))}</b> ${esc(a.title.replace(/^.*?:\s*/, ""))}</td>
+        ${groups.map(g => { const d = a.dates[g.secs[0]];
+          const mixed = g.secs.some(s => JSON.stringify(a.dates[s] || null) !== JSON.stringify(d || null));
+          return `<td class="grp"><div class="row" style="gap:6px">
+            <input type="date" data-a="${a.id}" data-g="${g.day}" data-k="taught" value="${d ? localDay(d.opens) : ""}" title="Taught">
+            <input type="date" data-a="${a.id}" data-g="${g.day}" data-k="due" value="${d ? localDay(d.due) : ""}" title="Due 7:00 AM">
+            <span class="mutedtxt">${d ? "closes " + fmtD(d.closes) : "not scheduled"}${mixed ? " · sections differ" : ""}</span></div></td>`; }).join("")}</tr>`).join("")}
+      <tr><td><b>Unit ${esc(S.unit)} test</b><div class="mutedtxt">Homework closes 10 school days after the test (11:59 PM).</div></td>
+        ${groups.map(g => `<td class="grp"><input type="date" data-test="${g.day}" value="${testFor(g)}"></td>`).join("")}</tr>
+    </table></div>
+    <div class="row"><button class="btn" id="save">Save schedule</button><span class="mutedtxt" id="dirty"></span></div>
+    <div class="card" style="margin-top:18px">
+      <h2>Days with no school</h2>
+      <p class="mutedtxt" style="margin-top:-6px">These are skipped when counting school days for due dates, late penalties, and closing dates. Preloaded from the CMS 2026-27 traditional calendar; add weather days here.</p>
+      <div class="row" style="margin-bottom:10px"><input type="date" id="nsd"><input type="text" id="nsn" placeholder="Note (optional)"><button class="btn alt" id="nsa">Add day</button></div>
+      <div class="row">${S.data.no_school.map(n => `<span class="tag sec" style="font-size:.85rem;padding:4px 10px">${fmtD(n.day + "T12:00")}${n.note ? " · " + esc(n.note) : ""}
+        <button class="x" style="font-size:1rem" data-ns="${n.day}" title="Remove">×</button></span>`).join("")}</div>
+    </div>`;
+  document.getElementById("rf").onclick = refresh;
+  wireUnitPicker(renderSchedule);
+  const dirty = new Set();
+  const mark = el => { el.classList.add("dirty"); dirty.add(el.dataset.test ? "T" + el.dataset.test : el.dataset.a + "|" + el.dataset.g);
+    document.getElementById("dirty").textContent = `${dirty.size} unsaved change(s)`; };
+  app.querySelectorAll("input[data-k=taught]").forEach(inp => inp.onchange = () => {
+    const due = app.querySelector(`input[data-a="${inp.dataset.a}"][data-g="${inp.dataset.g}"][data-k=due]`);
+    due.value = inp.value ? addSchoolDays(inp.value, 2) : "";
+    mark(inp); mark(due);
+  });
+  app.querySelectorAll("input[data-k=due], input[data-test]").forEach(inp => inp.onchange = () => mark(inp));
+  document.getElementById("save").onclick = async () => {
+    const btn = document.getElementById("save"); btn.disabled = true; btn.textContent = "Saving…";
+    try {
+      for (const g of groups) {   // unit test first so closing dates are right
+        if (!dirty.has("T" + g.day)) continue;
+        const v = app.querySelector(`input[data-test="${g.day}"]`).value;
+        await rpc("aps_teacher_set_unit_test", { p_password: S.pw, p_unit: S.unit, p_sections: g.secs, p_test: v || null });
+      }
+      for (const key of dirty) {
+        if (key.startsWith("T")) continue;
+        const [aid, day] = key.split("|"); const g = groups.find(x => x.day === day);
+        const t = app.querySelector(`input[data-a="${aid}"][data-g="${day}"][data-k=taught]`).value;
+        const d = app.querySelector(`input[data-a="${aid}"][data-g="${day}"][data-k=due]`).value;
+        if (t && !d) throw new Error("Every taught date needs a due date.");
+        if (t && d < t) throw new Error("A due date is before its taught date.");
+        await rpc("aps_teacher_set_dates", { p_password: S.pw, p_assignment: aid, p_sections: g.secs,
+          p_opens: t ? at7(t) : null, p_due: t ? at7(d) : null });
+      }
+      await refresh(); alertBox("Schedule saved.", true);
+    } catch (e) { btn.disabled = false; btn.textContent = "Save schedule"; alertBox(e.message); }
+  };
+  document.getElementById("nsa").onclick = async () => {
+    const d = document.getElementById("nsd").value; if (!d) return;
+    try { await rpc("aps_teacher_no_school", { p_password: S.pw, p_day: d, p_add: true, p_note: document.getElementById("nsn").value || null }); await refresh(); }
+    catch (e) { alertBox(e.message); }
+  };
+  app.querySelectorAll("[data-ns]").forEach(b => b.onclick = async () => {
+    try { await rpc("aps_teacher_no_school", { p_password: S.pw, p_day: b.dataset.ns, p_add: false, p_note: null }); await refresh(); }
+    catch (e) { alertBox(e.message); }
+  });
+}
+
+// ---------------- ROSTER ----------------
+function parseNames(text) {
+  return text.split(/\r?\n/).map(l => l.trim()).filter(l => l && !/\bname\b/i.test(l)).map(l => {
+    if (l.includes("\t")) { const cols = l.split("\t").map(c => c.trim()).filter(c => c && !/^\d+$/.test(c)); return { last: cols[0] || "", first: cols[1] || "" }; }
+    if (l.includes(",")) { const [last, ...rest] = l.split(","); return { last: last.trim(), first: rest.join(",").trim() }; }
+    const parts = l.split(/\s+/); return { first: parts.slice(0, -1).join(" "), last: parts.slice(-1)[0] };
+  }).filter(n => n.first && n.last);
+}
+
+function renderRoster() {
+  const st = S.data.students.filter(inSec);
+  const secOpts = sel => S.data.sections.map(s => `<option value="${esc(s.id)}" ${s.id === sel ? "selected" : ""}>${esc(s.id)}</option>`).join("");
+  app.innerHTML = `
+    <div class="row" style="justify-content:space-between"><div><h1>Roster & PINs</h1>
+    <p class="sub">Students pick their class, tap their name, and type their 4-digit PIN. Five wrong PINs lock that student out for 5 minutes.</p></div>
+    <div class="row">${secPicker()}</div></div>
+    <div class="card">
+      <h2>Add students</h2>
+      <p class="mutedtxt" style="margin-top:-6px">One student per line: <b>Last, First</b>, or paste spreadsheet columns (Last Name, then First Name). Each new student gets a random PIN, and duplicates are skipped.</p>
+      <div class="row" style="margin-bottom:8px"><label>Add to section <select id="addsec">${secOpts(S.sec === "all" ? S.data.sections[0].id : S.sec)}</select></label></div>
+      <textarea id="names" placeholder="Ruiz, Maya&#10;Ortiz, Ben"></textarea>
+      <div class="row" style="margin-top:10px"><button class="btn" id="add">Add students</button><span id="prev" class="mutedtxt"></span></div>
+    </div>
+    <div class="card scroll">
+      <div class="row" style="justify-content:space-between;margin-bottom:8px"><h2 style="margin:0">Students (${st.filter(s => s.active).length} active${S.sec === "all" ? "" : " in " + esc(S.sec)})</h2>
+        <button class="btn alt" id="print" ${st.length ? "" : "disabled"}>🖨 Print PIN slips${S.sec === "all" ? "" : " for " + esc(S.sec)}</button></div>
+      <table class="t"><tr><th>Name</th><th>Section</th><th>PIN</th><th>Status</th><th></th></tr>
+      ${st.map(s => `<tr style="${s.active ? "" : "opacity:.5"}"><td><b>${esc(s.last)}</b>, ${esc(s.first)}</td>
+        <td><select data-move="${s.id}">${secOpts(s.section)}</select></td>
+        <td><span class="pin">${esc(s.pin)}</span></td><td>${s.active ? (s.locked ? `<span class="bad">Locked</span>` : "Active") : "Removed"}</td>
+        <td class="row" style="justify-content:flex-end">
+          <button class="btn alt sm" data-act="reset_pin" data-id="${s.id}">New PIN</button>
+          <button class="btn alt sm" data-act="unlock" data-id="${s.id}">Unlock</button>
+          ${s.active ? `<button class="btn warn sm" data-act="deactivate" data-id="${s.id}">Remove</button>`
+                     : `<button class="btn alt sm" data-act="activate" data-id="${s.id}">Restore</button>`}</td></tr>`).join("")}
+      </table>
+      <p class="mutedtxt">Changing the Section box moves a student to another class (their work stays). "Remove" hides a student from the login screen and gradebook but keeps their work. "Unlock" clears a PIN lockout.</p>
+    </div>`;
+  wireSecPicker(renderRoster);
+  const ta = document.getElementById("names");
+  ta.oninput = () => { const n = parseNames(ta.value); document.getElementById("prev").textContent = n.length ? `${n.length} student(s) found, for example: ${n[0].first} ${n[0].last}` : ""; };
+  document.getElementById("add").onclick = async () => {
+    const n = parseNames(ta.value); if (!n.length) return;
+    try { const r = await rpc("aps_teacher_add_students", { p_password: S.pw, p_section: document.getElementById("addsec").value, p_names: n });
+          await refresh(); alertBox(`Added ${r.added} student(s).`, true); } catch (e) { alertBox(e.message); }
+  };
+  app.querySelectorAll("[data-act]").forEach(b => b.onclick = async () => {
+    try { await rpc("aps_teacher_student", { p_password: S.pw, p_student: +b.dataset.id, p_action: b.dataset.act, p_value: null }); await refresh(); }
+    catch (e) { alertBox(e.message); }
+  });
+  app.querySelectorAll("[data-move]").forEach(sel => sel.onchange = async () => {
+    try { await rpc("aps_teacher_student", { p_password: S.pw, p_student: +sel.dataset.move, p_action: "move", p_value: sel.value }); await refresh(); alertBox("Student moved.", true); }
+    catch (e) { alertBox(e.message); }
+  });
+  document.getElementById("print").onclick = () => {
+    const url = location.href.replace(/teacher\.html.*$/, "");
+    document.getElementById("slips").innerHTML = st.filter(s => s.active).map(s => `
+      <div class="slip"><b>${esc(s.first)} ${esc(s.last)}</b> · AP Stats ${esc(s.section)}<br>Homework PIN: <span class="pin">${esc(s.pin)}</span><br>
+      <span style="font-size:12px">${esc(url)}<br>Keep this PIN private.</span></div>`).join("");
+    window.print();
+  };
+}
+
+// ---------------- EXPORT ----------------
+function csvParse(text) {
+  const rows = []; let row = [], f = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"') { if (text[i+1] === '"') { f += '"'; i++; } else q = false; } else f += c; }
+    else if (c === '"') q = true;
+    else if (c === ",") { row.push(f); f = ""; }
+    else if (c === "\n" || c === "\r") { if (c === "\r" && text[i+1] === "\n") i++; row.push(f); rows.push(row); row = []; f = ""; }
+    else f += c;
+  }
+  if (f !== "" || row.length) { row.push(f); rows.push(row); }
+  return rows.filter(r => r.some(x => x.trim() !== ""));
+}
+const csvCell = v => /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v);
+function download(name, rows) {
+  const blob = new Blob([rows.map(r => r.map(csvCell).join(",")).join("\r\n")], { type: "text/csv" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; a.click();
+}
+const norm = s => String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z ]/g, " ").replace(/\s+/g, " ").trim();
+
+function renderExport() {
+  const up = unitPicker();
+  const as = S.data.assignments.filter(a => a.unit === S.unit);
+  app.innerHTML = `
+    <div class="row" style="justify-content:space-between"><div><h1>Export to Canvas</h1>
+    <p class="sub">Scores are out of 100 and include every penalty. Unfinished questions count as 0, so export after the assignment closes (or whenever you want a snapshot).</p></div>
+    <div class="row">${secPicker()}${up}</div></div>
+    <div class="card"><h2>1. Choose assignments</h2>
+      ${as.map(a => `<label class="row" style="margin:6px 0"><input type="checkbox" class="ac" value="${a.id}" checked> ${esc(a.title)}</label>`).join("")}
+    </div>
+    <div class="card"><h2>2a. Fill in your Canvas gradebook (recommended)</h2>
+      <ol class="mutedtxt" style="margin-top:-4px">
+        <li>In Canvas, open <b>Grades → Export → Export Entire Gradebook</b> and save the CSV.</li>
+        <li>Choose that file below. For each homework assignment, pick its Canvas column, or let it create a new column. Students are matched by name across ${S.sec === "all" ? "all four sections" : "section " + esc(S.sec)}.</li>
+        <li>Download the filled-in file, then in Canvas use <b>Grades → Import</b> and upload it.</li></ol>
+      <input type="file" id="cf" accept=".csv,text/csv">
+      <div id="map"></div>
+    </div>
+    <div class="card"><h2>2b. Or download a simple score sheet</h2>
+      <p class="mutedtxt" style="margin-top:-6px">One row per student, one column per assignment.</p>
+      <button class="btn alt" id="simple">⬇ Download scores CSV</button></div>`;
+  wireSecPicker(renderExport); wireUnitPicker(renderExport);
+  const chosen = () => [...app.querySelectorAll(".ac:checked")].map(i => as.find(a => a.id === i.value));
+  document.getElementById("simple").onclick = () => {
+    const sm = stateMap(), cs = chosen();
+    download(`apstats_homework_${S.sec}.csv`, [["Section", "Last", "First", ...cs.map(a => a.title)],
+      ...activeStudents().map(s => [s.section, s.last, s.first, ...cs.map(a => summary(s, a, sm).score)])]);
+  };
+  document.getElementById("cf").onchange = async e => {
+    const file = e.target.files[0]; if (!file) return;
+    const rows = csvParse(await file.text());
+    const box = document.getElementById("map");
+    if (!rows.length || norm(rows[0][0]) !== "student") { box.innerHTML = `<div class="err">That doesn't look like a Canvas gradebook export (the first column should be "Student").</div>`; return; }
+    const head = rows[0];
+    let idEnd = head.findIndex(h => norm(h) === "section");
+    if (idEnd < 0) idEnd = Math.max(1, head.findIndex(h => norm(h) === "sis login id"));
+    const canvasCols = head.slice(idEnd + 1).map((h, i) => ({ h, i: i + idEnd + 1 })).filter(c => /\(\d+\)\s*$/.test(c.h));
+    const cs = chosen();
+    box.innerHTML = `<div class="card" style="margin-top:12px;background:#FAFCFE">
+      ${cs.map(a => { const guess = canvasCols.find(c => norm(c.h).includes(norm(shortTitle(a)).slice(0, 10)));
+        return `<div class="row" style="margin:6px 0"><b style="min-width:300px">${esc(a.title)}</b> →
+          <select data-a="${a.id}"><option value="new">➕ New column: "${esc(shortTitle(a))}"</option>
+          ${canvasCols.map(c => `<option value="${c.i}" ${guess && guess.i === c.i ? "selected" : ""}>${esc(c.h)}</option>`).join("")}</select></div>`; }).join("")}
+      <button class="btn" id="mk" style="margin-top:10px">⬇ Download file for Canvas import</button><div id="rep"></div></div>`;
+    document.getElementById("mk").onclick = () => {
+      const sm = stateMap(), studs = activeStudents();
+      const maps = cs.map(a => ({ a, col: box.querySelector(`select[data-a="${a.id}"]`).value }));
+      const outHead = [...head.slice(0, idEnd + 1), ...maps.map(m => m.col === "new" ? shortTitle(m.a) : head[+m.col])];
+      const out = [outHead]; const matched = new Set(); const unmatchedCanvas = [];
+      for (const r of rows.slice(1)) {
+        const name = r[0] || "";
+        if (/points possible/i.test(name)) { out.push([...r.slice(0, idEnd + 1), ...maps.map(m => m.col === "new" ? "100" : r[+m.col])]); continue; }
+        if (/^student, test$/i.test(name.trim())) continue;
+        const [cl, cf = ""] = name.split(",").map(norm);
+        const s = studs.find(s => norm(s.last) === cl && (cf.startsWith(norm(s.first)) || norm(s.first).startsWith(cf.split(" ")[0] || "#")))
+               || studs.find(s => norm(s.last) === cl && studs.filter(x => norm(x.last) === cl).length === 1);
+        if (!s) { unmatchedCanvas.push(name); out.push([...r.slice(0, idEnd + 1), ...maps.map(() => "")]); continue; }
+        matched.add(s.id);
+        out.push([...r.slice(0, idEnd + 1), ...maps.map(m => m.a.dates[s.section] ? summary(s, m.a, sm).score : "")]);
+      }
+      const unmatchedHere = studs.filter(s => !matched.has(s.id));
+      download("canvas_import_apstats_homework.csv", out);
+      document.getElementById("rep").innerHTML = `<div class="ok">Matched ${matched.size} student(s). File downloaded.</div>
+        ${unmatchedCanvas.length ? `<div class="err">In Canvas but not matched (left blank): ${unmatchedCanvas.map(esc).join("; ")}</div>` : ""}
+        ${unmatchedHere.length ? `<div class="err">On this platform but not found in the Canvas file: ${unmatchedHere.map(s => esc(s.first + " " + s.last + " (" + s.section + ")")).join("; ")}</div>` : ""}`;
+    };
+  };
+}
+
+// ---------------- START ----------------
+S.pw ? refresh() : showLogin();
+</script>
+</body>
+</html>

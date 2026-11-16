@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AP Statistics Homework</title>
+<style>
+  :root{
+    --blue:#4B9CD3; --blue-dk:#1F6FA8; --blue-lt:#EAF4FB; --orange:#F56600; --orange-lt:#FFF1E6;
+    --ink:#1B2733; --muted:#5B6B7A; --line:#DCE6EE; --bg:#F5F8FB; --card:#fff;
+    --good:#1E8E3E; --good-lt:#E7F5EB; --bad:#C62828; --bad-lt:#FDECEC; --warn:#9A5B00; --warn-lt:#FFF6DD;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.45}
+  button{font:inherit;cursor:pointer}
+  header{background:var(--blue);color:#fff;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:4px solid var(--orange)}
+  header .brand{font-weight:800;font-size:1.15rem;letter-spacing:.2px}
+  header .brand small{font-weight:600;opacity:.85;margin-left:6px}
+  header .who{display:flex;align-items:center;gap:10px;font-weight:600}
+  .linkbtn{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.45);color:#fff;border-radius:8px;padding:5px 12px}
+  .linkbtn:hover{background:rgba(255,255,255,.3)}
+  main{max-width:860px;margin:0 auto;padding:24px 16px 80px}
+  h1{font-size:1.5rem;margin:0 0 4px} h2{font-size:1.2rem;margin:0}
+  .sub{color:var(--muted);margin:0 0 20px}
+  .banner{background:var(--warn-lt);border:1px solid #F2D58A;color:var(--warn);padding:10px 14px;border-radius:10px;margin-bottom:16px;font-weight:600}
+  .err{background:var(--bad-lt);color:var(--bad);padding:10px 14px;border-radius:10px;margin:12px 0;font-weight:600}
+
+  /* Login */
+  .names{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+  .names button{background:var(--card);border:2px solid var(--line);border-radius:12px;padding:16px 10px;font-weight:700;font-size:1.02rem;color:var(--ink)}
+  .names button:hover{border-color:var(--blue);background:var(--blue-lt)}
+  .pinbox{max-width:340px;margin:10px auto 0;background:var(--card);border-radius:16px;padding:24px;box-shadow:0 4px 18px rgba(20,40,60,.08);text-align:center}
+  .dots{display:flex;justify-content:center;gap:12px;margin:18px 0}
+  .dots span{width:18px;height:18px;border-radius:50%;border:2px solid var(--blue);display:inline-block}
+  .dots span.on{background:var(--blue)}
+  .pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .pad button{padding:14px 0;font-size:1.3rem;font-weight:700;border-radius:12px;border:1px solid var(--line);background:#fff}
+  .pad button:hover{background:var(--blue-lt)}
+  .pad .muted{font-size:.95rem;color:var(--muted)}
+
+  /* Assignment list */
+  .alist{display:grid;gap:12px}
+  .acard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;align-items:center;gap:16px;text-align:left;width:100%;color:inherit}
+  .acard:hover:not([disabled]){border-color:var(--blue);box-shadow:0 2px 10px rgba(75,156,211,.18)}
+  .acard[disabled]{opacity:.65;cursor:default}
+  .acard .main{flex:1;min-width:0}
+  .acard .title{font-weight:700;font-size:1.05rem}
+  .acard .meta{color:var(--muted);font-size:.92rem;margin-top:3px}
+  .bar{height:7px;background:var(--line);border-radius:9px;margin-top:9px;overflow:hidden}
+  .bar i{display:block;height:100%;background:var(--blue)}
+  .acard .score{text-align:right;min-width:78px}
+  .acard .score b{font-size:1.35rem;display:block}
+  .acard .score small{color:var(--muted)}
+  .chip{display:inline-block;font-size:.78rem;font-weight:700;padding:2px 9px;border-radius:99px;vertical-align:1px;margin-left:6px}
+  .chip.open{background:var(--blue-lt);color:var(--blue-dk)} .chip.late{background:var(--orange-lt);color:#B34A00}
+  .chip.closed{background:#EEF1F4;color:var(--muted)} .chip.upcoming{background:#EEF1F4;color:var(--muted)}
+  .chip.done{background:var(--good-lt);color:var(--good)} .chip.tag{background:#F1ECFA;color:#5B3A99}
+
+  /* Assignment view */
+  .topbar{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0 12px;margin:-10px 0 8px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--line)}
+  .back{background:none;border:none;color:var(--blue-dk);font-weight:700;padding:6px 0}
+  .topbar .t{flex:1;min-width:0}
+  .topbar .t b{display:block;font-size:1.05rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .topbar .t small{color:var(--muted)}
+  .total{background:var(--card);border:2px solid var(--blue);border-radius:12px;padding:4px 12px;text-align:center;font-weight:800}
+  .total small{display:block;font-weight:600;color:var(--muted);font-size:.72rem}
+  details.rules{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:14px 0 18px;font-size:.94rem}
+  details.rules summary{font-weight:700;cursor:pointer;color:var(--blue-dk)}
+  details.rules ul{margin:8px 0 2px;padding-left:20px}
+  .prob{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin-bottom:18px}
+  .prob-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+  .prob-h h2{font-size:1.1rem}
+  .stem{margin:4px 0 8px}
+  .desmos{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1.5px solid var(--good);color:var(--good);font-weight:700;border-radius:9px;padding:6px 12px;text-decoration:none;font-size:.92rem;margin:4px 0 6px}
+  .desmos:hover{background:var(--good-lt)}
+  /* Floating Desmos window */
+  #calc{position:fixed;right:20px;bottom:20px;width:min(560px,calc(100vw - 32px));height:min(600px,calc(100vh - 110px));
+        min-width:300px;min-height:300px;background:#fff;border:2px solid var(--good);border-radius:14px;
+        box-shadow:0 18px 50px rgba(15,40,60,.28);z-index:50;display:none;flex-direction:column;overflow:hidden;resize:both}
+  #calc.open{display:flex}
+  #calc .cbar{background:var(--good);color:#fff;padding:6px 8px 6px 14px;display:flex;align-items:center;gap:6px;cursor:move;user-select:none;touch-action:none}
+  #calc .cbar b{flex:1;font-size:.95rem}
+  #calc .cbar a,#calc .cbar button{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.45);color:#fff;border-radius:7px;padding:3px 9px;font-size:.85rem;font-weight:700;text-decoration:none;cursor:pointer}
+  #calc .cbar button.close{font-size:1.1rem;line-height:1;padding:2px 9px}
+  #calc iframe{flex:1;border:0;width:100%;display:block}
+  #calc.dragging iframe{pointer-events:none}
+  #calc .grip{position:absolute;right:2px;bottom:0;font-size:12px;color:#8FA6B8;pointer-events:none}
+  .part{border-top:1px dashed var(--line);padding-top:14px;margin-top:14px}
+  .part:first-of-type{border-top:none;margin-top:6px;padding-top:6px}
+  .part-h{display:flex;gap:10px;align-items:flex-start}
+  .plabel{background:var(--blue);color:#fff;font-weight:800;border-radius:8px;min-width:30px;height:30px;display:grid;place-items:center;flex:none}
+  .prompt{flex:1;padding-top:3px}
+  .pts{color:var(--muted);font-size:.85rem;white-space:nowrap;padding-top:5px}
+  .answer{margin:12px 0 0 40px}
+  .m{font-family:"Cambria Math","Cambria","Times New Roman",serif;font-size:1.08em;white-space:nowrap}
+
+  table.grid{border-collapse:collapse;background:#fff;margin:4px 0}
+  table.grid th,table.grid td{border:1px solid #B9C9D6;padding:6px 10px;text-align:center}
+  table.grid th{background:var(--blue-lt);font-size:.9rem}
+  table.grid td input{width:92px;text-align:center}
+  input.num{font:inherit;padding:7px 9px;border:1.5px solid #AFC2D1;border-radius:8px;width:120px;background:#fff}
+  input.num:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(75,156,211,.25)}
+  input.num.bad{border-color:var(--bad);background:var(--bad-lt)}
+  input.num:disabled{background:#F3F6F8;color:var(--ink)}
+  .coord{display:flex;align-items:center;gap:4px;margin:6px 0;font-size:1.15rem}
+  .cgroup{display:flex;gap:14px;align-items:flex-start;padding:4px 0}
+  .clabel{min-width:110px;font-weight:700;color:var(--blue-dk);padding-top:13px;font-size:.92rem}
+  .expr{display:flex;align-items:center;gap:8px;font-size:1.15rem}
+  input.num.wide{width:min(340px,100%)}
+  .preview{margin-top:6px;font-family:"Cambria Math","Cambria","Times New Roman",serif;font-size:1.1rem;color:var(--blue-dk);min-height:1.3em}
+  .tip{color:var(--muted);font-size:.85rem;margin-top:4px}
+  .match{display:grid;gap:14px}
+  .mitems{display:grid;gap:8px}
+  .mrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .mitem{min-width:150px;font-family:"Cambria Math","Cambria","Times New Roman",serif;font-size:1.08rem}
+  .arrow{color:var(--muted)}
+  .mslot{min-width:210px;min-height:46px;border:2px dashed #AFC2D1;border-radius:10px;background:#FAFCFE;padding:6px 12px;display:flex;align-items:center;gap:8px;text-align:left;color:var(--ink)}
+  .mslot .empty{color:#8FA6B8;font-size:.88rem;font-family:system-ui,sans-serif}
+  .mslot.full{border-style:solid;border-color:var(--blue);background:var(--blue-lt)}
+  .mslot.ready:not(.full),.mslot.over{border-color:var(--orange);background:var(--orange-lt)}
+  .mslot.bad{border-color:var(--bad);background:var(--bad-lt)}
+  .mslot:disabled{cursor:default}
+  .mbank{background:#F4F7FA;border-radius:12px;padding:10px 12px}
+  .mcards{display:flex;flex-wrap:wrap;gap:8px}
+  .mcard{background:#fff;border:1.5px solid #C9D7E2;border-radius:10px;padding:8px 12px;cursor:grab;display:flex;align-items:center;gap:8px;user-select:none}
+  .mcard:hover{border-color:var(--blue)}
+  .mcard.picked{border-color:var(--orange);box-shadow:0 0 0 3px rgba(245,102,0,.25)}
+  .mcard.dragging{opacity:.5}
+  .mtag{font-weight:800;color:var(--muted);font-size:.8rem;font-family:system-ui,sans-serif}
+  .mcard svg,.mslot svg{display:block}
+  table.grid.diag td{min-width:60px;height:44px;font-family:"Cambria Math","Cambria","Times New Roman",serif;font-size:1.05rem}
+  table.grid.diag td.h{border:none;background:none;color:var(--muted)}
+  .coord input{width:76px;text-align:center}
+  .choices{display:grid;gap:8px;max-width:640px}
+  .choice{display:flex;gap:10px;align-items:flex-start;text-align:left;background:#fff;border:1.5px solid #C9D7E2;border-radius:10px;padding:10px 12px;color:var(--ink)}
+  .choice .box{width:20px;height:20px;border:2px solid #8FA6B8;border-radius:50%;flex:none;margin-top:1px;display:grid;place-items:center;font-size:13px;color:#fff}
+  .choice.sq .box{border-radius:5px}
+  .choice.sel{border-color:var(--blue);background:var(--blue-lt)}
+  .choice.sel .box{background:var(--blue);border-color:var(--blue)}
+  .choice:disabled{cursor:default}
+  .choices.wrap{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}
+
+  .actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:14px 0 0 40px}
+  .check{background:var(--orange);color:#fff;border:none;border-radius:10px;padding:9px 22px;font-weight:800}
+  .check:hover{filter:brightness(.95)} .check:disabled{opacity:.55;cursor:default}
+  .tries{color:var(--muted);font-size:.9rem;display:flex;align-items:center;gap:6px}
+  .tries i{width:10px;height:10px;border-radius:50%;background:var(--blue);display:inline-block}
+  .tries i.used{background:#D2DCE4}
+  .hintbtn{background:#fff;border:1.5px solid var(--blue);color:var(--blue-dk);border-radius:10px;padding:7px 14px;font-weight:700}
+  .hintbtn:hover{background:var(--blue-lt)}
+  .maxpct{font-size:.85rem;color:var(--muted);margin-left:auto}
+  .confirm{margin:10px 0 0 40px;background:var(--blue-lt);border-radius:10px;padding:10px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .confirm button{border-radius:8px;padding:6px 14px;font-weight:700;border:none}
+  .confirm .yes{background:var(--blue-dk);color:#fff} .confirm .no{background:#fff;color:var(--ink);border:1px solid var(--line)}
+  .hint{margin:10px 0 0 40px;background:#F4F9FD;border-left:4px solid var(--blue);border-radius:6px;padding:9px 13px;font-size:.96rem}
+  .hint b{color:var(--blue-dk)}
+  .fb{margin:12px 0 0 40px;border-radius:10px;padding:10px 14px;font-size:.96rem}
+  .fb.bad{background:var(--bad-lt);color:#8E1C1C} .fb.good{background:var(--good-lt);color:#145C29}
+  .fb.info{background:var(--warn-lt);color:var(--warn)} .fb.out{background:#F3F0F7;color:#3E2C63}
+  .fb .x{margin-top:6px;color:var(--ink)}
+  .center{text-align:center;color:var(--muted);padding:40px 0}
+  .sections{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;max-width:640px}
+  .sections button{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:20px 10px;color:var(--ink)}
+  .sections button:hover{border-color:var(--blue);background:var(--blue-lt)}
+  .sections button b{display:block;font-size:1.6rem;color:var(--blue-dk)}
+  .sections button small{color:var(--muted);font-weight:600}
+  .crumb{background:none;border:none;color:var(--blue-dk);font-weight:700;padding:0;margin-bottom:10px}
+  img.fig{display:block;max-width:100%!important;height:auto;margin:10px 0;border:1px solid var(--line);border-radius:8px;background:#fff;padding:6px;cursor:zoom-in}
+  .prompt img.fig{margin:8px 0}
+  .stem table.grid,.prompt table.grid{font-size:.92rem;display:block;overflow-x:auto;max-width:100%}
+  .chip.ced{background:#EEF4EA;color:#3B6B2A;font-weight:600}
+  .suffix{color:var(--muted);font-weight:600;margin-left:6px}
+  #zoom{position:fixed;inset:0;background:rgba(15,30,45,.8);display:none;place-items:center;z-index:60;cursor:zoom-out;padding:20px}
+  #zoom.open{display:grid}
+  #zoom img{max-width:min(1100px,96vw);max-height:92vh;background:#fff;border-radius:10px;padding:10px}
+  @media (max-width:560px){ .answer,.actions,.hint,.fb,.confirm{margin-left:0} .maxpct{margin-left:0;width:100%}
+    #calc{left:8px!important;right:8px!important;top:auto!important;bottom:8px!important;width:auto!important;height:62vh!important;resize:none} }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">BR: AP Statistics <small>Homework</small></div>
+  <div class="who" id="who"></div>
+</header>
+<main id="app"><div class="center">Loading…</div></main>
+<div id="calc" role="dialog" aria-label="Desmos graphing calculator">
+  <div class="cbar" id="calcbar">
+    <b>📈 Desmos · College Board version</b>
+    <a href="https://www.desmos.com/testing/cb-sat-ap/graphing" target="_blank" rel="noopener" title="Open in a new tab">↗ New tab</a>
+    <button class="close" id="calcclose" title="Hide (your graph stays)">×</button>
+  </div>
+  <span class="grip">◢</span>
+</div>
+<div id="zoom" role="dialog" aria-label="Enlarged figure"><img alt=""></div>
+
+<script>
+// ====== SETTINGS ======
+const SUPABASE_URL = "https://hfanndrvacddqvrvgmqe.supabase.co";
+const SUPABASE_KEY = "sb_publishable_VElC8kqy_TL2yWPz7O33iQ_vQQaifXQ";
+// The College Board version of Desmos (same calculator students use on the AP exam in Bluebook)
+const DESMOS_URL = "https://www.desmos.com/testing/cb-sat-ap/graphing";
+const TOKEN_KEY = "aps_token", SECTION_KEY = "aps_section";
+// ======================
+
+const app = document.getElementById("app");
+const who = document.getElementById("who");
+const store = {
+  get(k){ try { return localStorage.getItem(k); } catch(e){ return store._m[k] || null; } },
+  set(k,v){ try { localStorage.setItem(k,v); } catch(e){ store._m[k] = v; } },
+  del(k){ try { localStorage.removeItem(k); } catch(e){ delete store._m[k]; } },
+  _m:{}
+};
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt = n => (Math.round(Number(n) * 100) / 100).toString();
+const fmtDate = iso => new Date(iso).toLocaleDateString("en-US", { weekday:"short", month:"numeric", day:"numeric", timeZone:"America/New_York" });
+const fmtTime = iso => new Date(iso).toLocaleTimeString("en-US", { hour:"numeric", minute:"2-digit", timeZone:"America/New_York" });
+
+async function rpc(fn, args = {}) {
+  let r;
+  try {
+    r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+      method: "POST", headers: { apikey: SUPABASE_KEY, "Content-Type": "application/json" }, body: JSON.stringify(args) });
+  } catch (e) { throw new Error("Can't reach the homework server. Check your internet connection."); }
+  const data = await r.json().catch(() => null);
+  const msg = (data && (data.message || data.error)) || (!r.ok ? "Something went wrong (" + r.status + ")." : null);
+  if (msg && /SESSION_EXPIRED/.test(msg)) { store.del(TOKEN_KEY); state.token = null; showLogin("Please log in again."); throw new Error("__handled"); }
+  if (!r.ok || (data && data.error)) throw new Error(msg);
+  return data;
+}
+
+const state = { token: store.get(TOKEN_KEY), me: null, assignment: null, pending: {}, confirm: null, pick: {} };
+
+// ---------------- LOGIN ----------------
+async function showLogin(note) {
+  who.innerHTML = "";
+  app.innerHTML = `<div class="center">Loading classes…</div>`;
+  let secs;
+  try { secs = await rpc("aps_sections_list"); }
+  catch (e) { app.innerHTML = `<div class="err">${esc(e.message)}</div>`; return; }
+  app.innerHTML = `
+    <h1>Which class are you in?</h1>
+    <p class="sub">Pick your AP Statistics class period.</p>
+    ${note ? `<div class="banner">${esc(note)}</div>` : ""}
+    <div class="sections">${secs.map(c => `<button data-s="${esc(c.id)}"><b>${esc(c.id)}</b><small>${esc(c.day)}-day</small></button>`).join("")}</div>`;
+  app.querySelectorAll(".sections button").forEach(b => b.onclick = () => showNames(b.dataset.s, note));
+}
+
+async function showNames(section, note) {
+  store.set(SECTION_KEY, section);
+  app.innerHTML = `<div class="center">Loading class list…</div>`;
+  let list;
+  try { list = await rpc("aps_students_list", { p_section: section }); }
+  catch (e) { app.innerHTML = `<div class="err">${esc(e.message)}</div>`; return; }
+  app.innerHTML = `
+    <button class="crumb" id="chg">← Change class (${esc(section)})</button>
+    <h1>Who are you?</h1>
+    <p class="sub">Tap your name, then enter your 4-digit PIN.</p>
+    ${note ? `<div class="banner">${esc(note)}</div>` : ""}
+    <div class="names">${list.map(s => `<button data-id="${s.id}">${esc(s.name)}</button>`).join("")}</div>
+    ${list.length ? "" : `<p class="center">No students in this class yet. Ask your teacher.</p>`}`;
+  document.getElementById("chg").onclick = () => { store.del(SECTION_KEY); showLogin(); };
+  app.querySelectorAll(".names button").forEach(b =>
+    b.onclick = () => showPin(+b.dataset.id, b.textContent, section));
+}
+
+function showPin(id, name, section) {
+  let pin = "", busy = false;
+  app.innerHTML = `
+    <div class="pinbox">
+      <h2>Hi, ${esc(name)}!</h2>
+      <p class="sub" style="margin:4px 0 0">Enter your PIN</p>
+      <div class="dots" id="dots">${"<span></span>".repeat(4)}</div>
+      <div id="perr"></div>
+      <div class="pad">
+        ${[1,2,3,4,5,6,7,8,9].map(n => `<button data-k="${n}">${n}</button>`).join("")}
+        <button data-k="back" class="muted">⌫</button><button data-k="0">0</button><button data-k="cancel" class="muted">Not me</button>
+      </div>
+    </div>`;
+  const dots = () => document.querySelectorAll("#dots span").forEach((d, i) => d.classList.toggle("on", i < pin.length));
+  async function press(k) {
+    if (busy) return;
+    if (k === "cancel") { document.onkeydown = null; return showNames(section); }
+    if (k === "back") pin = pin.slice(0, -1);
+    else if (/^\d$/.test(k) && pin.length < 4) pin += k;
+    dots();
+    if (pin.length === 4) {
+      busy = true;
+      try {
+        const r = await rpc("aps_login", { p_student_id: id, p_pin: pin });
+        state.token = r.token; store.set(TOKEN_KEY, r.token); document.onkeydown = null; showList();
+      } catch (e) {
+        if (e.message === "__handled") return;
+        document.getElementById("perr").innerHTML = `<div class="err">${esc(e.message)}</div>`;
+        pin = ""; dots(); busy = false;
+      }
+    }
+  }
+  app.querySelectorAll(".pad button").forEach(b => b.onclick = () => press(b.dataset.k));
+  document.onkeydown = e => { if (/^\d$/.test(e.key)) press(e.key); else if (e.key === "Backspace") press("back"); };
+}
+
+async function logout() {
+  calc.classList.remove("open"); const old = calc.querySelector("iframe"); if (old) old.remove();
+  const t = state.token; state.token = null; store.del(TOKEN_KEY);
+  if (t) rpc("aps_logout", { p_token: t }).catch(() => {});
+  const sec = store.get(SECTION_KEY);
+  sec ? showNames(sec) : showLogin();
+}
+
+// ---------------- ASSIGNMENT LIST ----------------
+function statusChip(a) {
+  if (a.parts && a.done === a.parts) return `<span class="chip done">Complete</span>`;
+  return { open:`<span class="chip open">Open</span>`, late:`<span class="chip late">Late</span>`,
+           closed:`<span class="chip closed">Closed</span>`, upcoming:`<span class="chip upcoming">Not open yet</span>` }[a.status] || "";
+}
+function dueLine(a) {
+  if (a.status === "upcoming") return `Opens ${fmtDate(a.opens)}`;
+  if (a.status === "closed") return `Closed ${fmtDate(a.closes)}`;
+  if (a.status === "late") return `Was due ${fmtDate(a.due)} · −2% per school day late · closes ${fmtDate(a.closes)}`;
+  return `Due ${fmtDate(a.due)} at ${fmtTime(a.due)}`;
+}
+
+async function showList() {
+  app.innerHTML = `<div class="center">Loading your homework…</div>`;
+  let d;
+  try { d = await rpc("aps_my_assignments", { p_token: state.token }); }
+  catch (e) { if (e.message !== "__handled") app.innerHTML = `<div class="err">${esc(e.message)}</div>`; return; }
+  state.me = d;
+  who.innerHTML = `<span>${esc(d.name)}${d.is_test ? "" : ` · ${esc(d.section)}`}</span><button class="linkbtn" id="lo">Log out</button>`;
+  document.getElementById("lo").onclick = logout;
+  const list = [...d.assignments].sort((a, b) => (b.sort - a.sort));
+  app.innerHTML = `
+    ${d.is_test ? `<div class="banner">Teacher preview: you're the hidden Test Student. Every assignment is open, and nothing here counts.</div>` : ""}
+    <h1>Your homework</h1>
+    <p class="sub">Each assignment is worth 100 points.</p>
+    <div class="alist">${list.map(a => `
+      <button class="acard" data-id="${a.id}" ${a.status === "upcoming" ? "disabled" : ""}>
+        <div class="main">
+          <div class="title">${esc(a.title)} ${statusChip(a)}</div>
+          <div class="meta">${dueLine(a)}</div>
+          <div class="bar"><i style="width:${a.parts ? (100 * a.done / a.parts) : 0}%"></i></div>
+          <div class="meta">${a.done} of ${a.parts} questions finished</div>
+        </div>
+        <div class="score"><b>${fmt(a.score)}</b><small>/ 100</small></div>
+      </button>`).join("") || `<p class="center">No homework yet.</p>`}
+    </div>`;
+  app.querySelectorAll(".acard").forEach(b => b.onclick = () => showAssignment(b.dataset.id));
+}
+
+// ---------------- ASSIGNMENT ----------------
+async function showAssignment(id) {
+  app.innerHTML = `<div class="center">Loading…</div>`;
+  try { state.assignment = await rpc("aps_assignment", { p_token: state.token, p_assignment: id }); }
+  catch (e) { if (e.message !== "__handled") app.innerHTML = `<div class="err">${esc(e.message)}</div><button class="back" onclick="showList()">← All homework</button>`; return; }
+  state.pending = {}; state.confirm = null; state.feedback = {}; state.pick = {};
+  renderAssignment();
+  window.scrollTo(0, 0);
+}
+
+function findPart(pid) {
+  for (const pr of state.assignment.problems) for (const p of pr.parts) if (p.id === pid) return p;
+}
+function replacePart(newPart) {
+  for (const pr of state.assignment.problems) pr.parts = pr.parts.map(p => p.id === newPart.id ? newPart : p);
+  let total = 0; state.assignment.problems.forEach(pr => pr.parts.forEach(p => total += Number(p.score)));
+  state.assignment.score = total;
+}
+
+function renderAssignment() {
+  const a = state.assignment;
+  const closed = a.status === "closed";
+  const sub = a.status === "late" ? `Late · was due ${fmtDate(a.due)} · closes ${fmtDate(a.closes)}`
+            : closed ? `Closed ${fmtDate(a.closes)} · answers shown below`
+            : `Due ${fmtDate(a.due)} at ${fmtTime(a.due)}`;
+  app.innerHTML = `
+    <div class="topbar">
+      <button class="back" id="back">← All homework</button>
+      <div class="t"><b>${esc(a.title)}</b><small>${sub}</small></div>
+      <div class="total" id="total">${fmt(a.score)}<small>of 100</small></div>
+    </div>
+    ${a.status === "late" ? `<div class="banner">This assignment is late. Questions you finish now lose 2% for each school day past the due date.</div>` : ""}
+    <details class="rules"><summary>How scoring works</summary><ul>
+      <li>You get <b>5 tries</b> per question. Each wrong try takes off <b>5%</b> of that question.</li>
+      <li>Hints: Hint 1 costs <b>5%</b>, Hint 2 costs <b>10%</b>, Hint 3 costs <b>20%</b>. Only your biggest hint counts. They don't add up.</li>
+      <li>If you get it right, you always keep at least <b>50%</b> of the question.</li>
+      <li>If all 5 tries are wrong, the question scores 0 and you'll see the answer and an explanation.</li>
+      <li>Late work loses <b>2%</b> per school day (a right answer still keeps at least 50%).</li>
+      <li>Homework is due at <b>7:00 AM</b> on your next class day.</li>
+      <li>Tap <b>📈 Desmos</b> on any problem for the same calculator you'll use on the AP exam. Tap a graph to make it bigger.</li></ul></details>
+    ${a.problems.map(renderProblem).join("")}`;
+  document.getElementById("back").onclick = showList;
+  wire();
+}
+
+function renderProblem(pr) {
+  return `<section class="prob">
+    <div class="prob-h"><h2>${esc(pr.title)}</h2>${pr.tag ? `<span class="chip tag">${esc(pr.tag)}</span>` : ""}
+      ${pr.ced ? `<span class="chip ced" title="AP Statistics CED topic">CED ${esc(pr.ced)}</span>` : ""}</div>
+    ${pr.stem ? `<div class="stem">${pr.stem}</div>` : ""}
+    <button class="desmos" data-calc>📈 Desmos calculator (AP version)</button>
+    ${pr.parts.map(renderPart).join("")}
+  </section>`;
+}
+
+const hintCost = (p, tier) => tier ? p.hint_costs[tier - 1] : 0;
+const maxPct = (p, tier = p.hint_tier) => Math.max(50, 100 - hintCost(p, tier) - 5 * p.wrong);
+
+function renderPart(p) {
+  const locked = p.done || state.assignment.status === "closed";
+  const left = p.max_attempts - p.wrong;
+  const fb = state.feedback[p.id];
+  let fbHtml = "";
+  if (p.done && p.correct) {
+    const parts = [];
+    if (p.hint_tier) parts.push(`used hint ${p.hint_tier}`);
+    if (p.wrong) parts.push(`${p.wrong} wrong ${p.wrong === 1 ? "try" : "tries"}`);
+    if (p.late_days) parts.push(`${p.late_days} school day${p.late_days > 1 ? "s" : ""} late`);
+    fbHtml = `<div class="fb good"><b>✓ Correct!</b> You earned ${fmt(p.score)} of ${fmt(p.points)} points${parts.length ? ` (${parts.join(", ")})` : ""}.
+      ${p.explanation ? `<div class="x">${p.explanation}</div>` : ""}</div>`;
+  } else if (p.done) {
+    fbHtml = `<div class="fb out"><b>Out of tries.</b> This question scores 0.
+      <div class="x"><b>Answer:</b> ${p.answer_display}</div><div class="x">${p.explanation || ""}</div></div>`;
+  } else if (state.assignment.status === "closed") {
+    fbHtml = `<div class="fb out"><b>Answer:</b> ${p.answer_display || ""}<div class="x">${p.explanation || ""}</div></div>`;
+  } else if (fb) {
+    fbHtml = fb.invalid ? `<div class="fb info">${fb.msg}</div>`
+      : `<div class="fb bad"><b>Not quite.</b> ${fb.msg || "Check your work and try again."}
+           <div class="x">${left} ${left === 1 ? "try" : "tries"} left.${left <= 2 && p.hint_tier < p.hint_count ? " A hint might help." : ""}</div></div>`;
+  }
+  const nextHint = p.hint_tier + 1;
+  const showHintBtn = !locked && p.hint_tier < p.hint_count;
+  const mp = maxPct(p);
+  return `<div class="part" data-part="${p.id}">
+    <div class="part-h">
+      <div class="plabel">${esc(p.label) || "★"}</div>
+      <div class="prompt">${p.prompt}</div>
+      <div class="pts">${fmt(p.points)} pts</div>
+    </div>
+    <div class="answer">${renderInput(p, locked, fb)}</div>
+    ${p.hints.map((h, i) => `<div class="hint"><b>Hint ${i + 1}:</b> ${h}</div>`).join("")}
+    ${state.confirm === p.id ? `<div class="confirm">
+        <span>Hint ${nextHint} costs ${p.hint_costs[nextHint - 1]}% of this question${p.hint_tier ? ` (it replaces your Hint ${p.hint_tier} cost, not adds to it)` : ""}. The most you could earn drops to <b>${maxPct(p, nextHint)}%</b>. Show it?</span>
+        <button class="yes" data-act="hint-yes">Show hint ${nextHint}</button><button class="no" data-act="hint-no">Cancel</button></div>` : ""}
+    ${!locked ? `<div class="actions">
+        <button class="check" data-act="check">Check</button>
+        <span class="tries">Tries left: ${Array.from({length: p.max_attempts}, (_, i) => `<i class="${i < p.wrong ? "used" : ""}"></i>`).join("")}</span>
+        ${showHintBtn ? `<button class="hintbtn" data-act="hint">💡 Hint ${nextHint} (−${p.hint_costs[nextHint - 1]}%)</button>` : ""}
+        <span class="maxpct">Most you can earn now: ${mp}%</span>
+      </div>` : ""}
+    ${fbHtml}
+  </div>`;
+}
+
+function valOf(p, path) {
+  // pending (typed but unchecked) value first, then last submitted answer
+  const pend = state.pending[p.id];
+  const src = pend !== undefined ? pend : p.last_answer;
+  if (src == null) return "";
+  if (path == null) return src;
+  let v = src; for (const k of path) v = v == null ? undefined : v[k];
+  return v ?? "";
+}
+
+function renderInput(p, locked, fb) {
+  const dis = locked ? "disabled" : "";
+  const wrongCells = (fb && fb.wrong_cells) || [];
+  if (p.kind === "numeric") {
+    return `<input class="num" data-f="v" inputmode="decimal" autocomplete="off" placeholder="${esc(p.spec.placeholder || "")}" value="${esc(valOf(p))}" ${dis}>${p.spec.suffix ? `<span class="suffix">${esc(p.spec.suffix)}</span>` : ""}`;
+  }
+  if (p.kind === "table") {
+    const sp = p.spec;
+    return `<table class="grid"><tr>${sp.columns.map(c => `<th>${c}</th>`).join("")}</tr>
+      ${sp.rows.map(r => `<tr>${r.map(c => typeof c === "object"
+          ? `<td><input class="num ${wrongCells.includes(c.id) && !locked ? "bad" : ""}" data-f="cell" data-id="${c.id}" inputmode="decimal" autocomplete="off" value="${esc(valOf(p, [c.id]))}" ${dis}></td>`
+          : `<td>${c}</td>`).join("")}</tr>`).join("")}</table>`;
+  }
+  if (p.kind === "coord") {
+    let i = 0;
+    return coordGroups(p).map((g, gi) => {
+      const bad = wrongCells.includes(String(gi)) && !locked ? "bad" : "";
+      const rows = Array.from({ length: g.n }, () => { const k = i++; return `<div class="coord">(
+        <input class="num ${bad}" data-f="x" data-i="${k}" inputmode="decimal" autocomplete="off" placeholder="x" value="${esc(valOf(p, [k, 0]))}" ${dis}> ,
+        <input class="num ${bad}" data-f="y" data-i="${k}" inputmode="decimal" autocomplete="off" placeholder="y" value="${esc(valOf(p, [k, 1]))}" ${dis}> )</div>`; }).join("");
+      return g.label ? `<div class="cgroup"><div class="clabel">${g.label}</div><div>${rows}</div></div>` : rows;
+    }).join("");
+  }
+  if (p.kind === "expr") {
+    const v = valOf(p);
+    return `<div class="expr">${p.spec.prefix ? `<span class="m">${p.spec.prefix}</span>` : ""}
+      <input class="num wide" data-f="expr" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="${esc(p.spec.placeholder || "type your answer")}" value="${esc(v)}" ${dis}></div>
+      <div class="preview" data-preview>${v ? "Looks like: " + pretty(v) : ""}</div>
+      ${locked ? "" : `<div class="tip">Type <b>^</b> for exponents (x^2 means x²). ${p.spec.tip || ""}</div>`}`;
+  }
+  if (p.kind === "match") {
+    const cur = valOf(p) || {}; const pick = state.pick[p.id];
+    const used = new Set(Object.values(cur));
+    const tById = Object.fromEntries(p.spec.targets.map(t => [t.id, t]));
+    return `<div class="match">
+      <div class="mitems">${p.spec.items.map(it => {
+        const t = cur[it.id] ? tById[cur[it.id]] : null;
+        return `<div class="mrow"><div class="mitem">${it.html}</div><span class="arrow">→</span>
+          <button class="mslot ${t ? "full" : ""} ${wrongCells.includes(it.id) && !locked ? "bad" : ""} ${pick && !locked ? "ready" : ""}" data-f="slot" data-id="${it.id}" ${dis}>
+            ${t ? `<span class="mtag">${esc(t.tag || "")}</span>${t.html}` : `<span class="empty">${pick ? "Tap to place here" : "Drop a match here"}</span>`}</button></div>`; }).join("")}
+      </div>
+      ${locked ? "" : `<div class="mbank"><div class="tip" style="margin:0 0 6px">Drag each card onto its match, or tap a card and then tap a box. Tap a filled box to empty it.</div>
+        <div class="mcards">${p.spec.targets.filter(t => !used.has(t.id)).map(t => `
+          <div class="mcard ${pick === t.id ? "picked" : ""}" draggable="true" data-f="card" data-id="${t.id}" role="button" tabindex="0">
+            <span class="mtag">${esc(t.tag || "")}</span>${t.html}</div>`).join("") || `<span class="tip">All cards placed. Click Check!</span>`}</div></div>`}
+    </div>`;
+  }
+  if (p.kind === "mc" || p.kind === "multi") {
+    const multi = p.kind === "multi";
+    const cur = valOf(p);
+    const sel = multi ? (Array.isArray(cur) ? cur : []) : [cur];
+    const short = p.spec.choices.every(c => c.html.replace(/<[^>]+>/g, "").length < 26);
+    return `${multi ? `<div class="sub" style="margin:0 0 8px;font-size:.9rem">Select all that apply.</div>` : ""}
+      <div class="choices ${short ? "wrap" : ""}">${p.spec.choices.map(c => `
+      <button class="choice ${multi ? "sq" : ""} ${sel.includes(c.id) ? "sel" : ""}" data-f="choice" data-id="${c.id}" ${dis}>
+        <span class="box">${sel.includes(c.id) ? "✓" : ""}</span><span>${c.html}</span></button>`).join("")}</div>`;
+  }
+  return "";
+}
+
+function collect(p, el) {
+  if (p.kind === "numeric") return el.querySelector("[data-f=v]").value;
+  if (p.kind === "table") { const o = {}; el.querySelectorAll("[data-f=cell]").forEach(i => o[i.dataset.id] = i.value); return o; }
+  if (p.kind === "coord") return Array.from({ length: coordGroups(p).reduce((t, g) => t + g.n, 0) }, (_, i) =>
+      [el.querySelector(`[data-f=x][data-i="${i}"]`).value, el.querySelector(`[data-f=y][data-i="${i}"]`).value]);
+  if (p.kind === "expr") return el.querySelector("[data-f=expr]").value;
+  const v = state.pending[p.id] !== undefined ? state.pending[p.id] : p.last_answer;
+  return v ?? (p.kind === "multi" ? [] : p.kind === "match" ? {} : "");
+}
+
+const coordGroups = p => p.spec.groups || [{ label: null, n: p.spec.n }];
+
+// Shows what a typed expression means: x^2 → x², * → ·
+function pretty(s) {
+  return esc(s).replace(/\^\s*(\(([^()]*)\)|-?[0-9.]+|[a-zA-Z])/g, (m, g, inner) => `<sup>${inner ?? g}</sup>`)
+               .replace(/\*/g, "·").replace(/-/g, "−");
+}
+
+function placeCard(pid, slot, card) {
+  const cur = { ...(collect(findPart(pid), null) || {}) };
+  for (const k of Object.keys(cur)) if (cur[k] === card) delete cur[k];
+  cur[slot] = card;
+  state.pending[pid] = cur; state.pick[pid] = null;
+  rerenderPart(pid);
+}
+
+function rerenderPart(pid) {
+  const el = app.querySelector(`[data-part="${pid}"]`);
+  const tmp = document.createElement("div"); tmp.innerHTML = renderPart(findPart(pid));
+  el.replaceWith(tmp.firstElementChild);
+  document.getElementById("total").innerHTML = `${fmt(state.assignment.score)}<small>of 100</small>`;
+  wire();
+}
+
+// ---------------- DESMOS POP-UP ----------------
+// A floating window students can drag and resize. Closing only hides it, so their graph stays.
+const calc = document.getElementById("calc");
+function openCalc() {
+  if (!calc.querySelector("iframe")) {
+    const f = document.createElement("iframe");
+    f.src = DESMOS_URL;
+    f.title = "Desmos graphing calculator";
+    f.allow = "clipboard-write";
+    calc.insertBefore(f, calc.querySelector(".grip"));
+  }
+  calc.classList.add("open");
+}
+document.getElementById("calcclose").onclick = () => calc.classList.remove("open");
+(function makeDraggable() {
+  const bar = document.getElementById("calcbar");
+  let sx, sy, ox, oy;
+  bar.addEventListener("pointerdown", e => {
+    if (e.target.closest("a,button")) return;
+    const r = calc.getBoundingClientRect();
+    sx = e.clientX; sy = e.clientY; ox = r.left; oy = r.top;
+    calc.style.left = ox + "px"; calc.style.top = oy + "px"; calc.style.right = "auto"; calc.style.bottom = "auto";
+    calc.classList.add("dragging"); bar.setPointerCapture(e.pointerId);
+  });
+  bar.addEventListener("pointermove", e => {
+    if (!calc.classList.contains("dragging")) return;
+    const w = calc.offsetWidth, h = calc.offsetHeight;
+    calc.style.left = Math.min(Math.max(0, ox + e.clientX - sx), window.innerWidth - 80) + "px";
+    calc.style.top = Math.min(Math.max(0, oy + e.clientY - sy), window.innerHeight - 40) + "px";
+  });
+  const stop = () => calc.classList.remove("dragging");
+  bar.addEventListener("pointerup", stop); bar.addEventListener("pointercancel", stop);
+})();
+
+// Tap a graph to see it bigger
+const zoom = document.getElementById("zoom");
+zoom.onclick = () => zoom.classList.remove("open");
+document.addEventListener("keydown", e => { if (e.key === "Escape") zoom.classList.remove("open"); });
+
+function wire() {
+  app.querySelectorAll("[data-calc]").forEach(b => b.onclick = openCalc);
+  app.querySelectorAll("img.fig").forEach(im => im.onclick = () => {
+    const z = zoom.querySelector("img"); z.src = im.src; z.alt = im.alt; zoom.classList.add("open"); });
+  app.querySelectorAll(".part").forEach(el => {
+    if (el.dataset.wired) return; el.dataset.wired = 1;
+    const pid = el.dataset.part;
+    el.querySelectorAll("input.num").forEach(inp => {
+      inp.oninput = () => {
+        state.pending[pid] = collect(findPart(pid), el); inp.classList.remove("bad");
+        const pv = el.querySelector("[data-preview]");
+        if (pv) pv.innerHTML = inp.value.trim() ? "Looks like: " + pretty(inp.value) : "";
+      };
+      inp.onkeydown = e => { if (e.key === "Enter") check(pid); };
+    });
+    // matching: tap a card then a box, or drag a card onto a box
+    el.querySelectorAll("[data-f=card]").forEach(c => {
+      c.onclick = () => { state.pick[pid] = state.pick[pid] === c.dataset.id ? null : c.dataset.id; rerenderPart(pid); };
+      c.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); c.click(); } };
+      c.ondragstart = e => { e.dataTransfer.setData("text/plain", c.dataset.id); c.classList.add("dragging"); };
+      c.ondragend = () => c.classList.remove("dragging");
+    });
+    el.querySelectorAll("[data-f=slot]").forEach(s => {
+      s.onclick = () => {
+        if (state.pick[pid]) return placeCard(pid, s.dataset.id, state.pick[pid]);
+        const cur = { ...(collect(findPart(pid), null) || {}) };
+        if (cur[s.dataset.id]) { delete cur[s.dataset.id]; state.pending[pid] = cur; rerenderPart(pid); }
+      };
+      s.ondragover = e => { e.preventDefault(); s.classList.add("over"); };
+      s.ondragleave = () => s.classList.remove("over");
+      s.ondrop = e => { e.preventDefault(); const id = e.dataTransfer.getData("text/plain"); if (id) placeCard(pid, s.dataset.id, id); };
+    });
+    el.querySelectorAll("[data-f=choice]").forEach(b => b.onclick = () => {
+      const p = findPart(pid);
+      if (p.kind === "mc") state.pending[pid] = b.dataset.id;
+      else {
+        const cur = new Set(collect(p, el));
+        cur.has(b.dataset.id) ? cur.delete(b.dataset.id) : cur.add(b.dataset.id);
+        state.pending[pid] = [...cur];
+      }
+      rerenderPart(pid);
+    });
+    el.querySelectorAll("[data-act]").forEach(b => b.onclick = () => {
+      const act = b.dataset.act;
+      if (act === "check") check(pid);
+      if (act === "hint") { state.confirm = pid; rerenderPart(pid); }
+      if (act === "hint-no") { state.confirm = null; rerenderPart(pid); }
+      if (act === "hint-yes") takeHint(pid);
+    });
+  });
+}
+
+async function check(pid) {
+  const p = findPart(pid); const el = app.querySelector(`[data-part="${pid}"]`);
+  const ans = collect(p, el); state.pending[pid] = ans;
+  const btn = el.querySelector(".check"); if (btn) { btn.disabled = true; btn.textContent = "Checking…"; }
+  try {
+    const r = await rpc("aps_submit", { p_token: state.token, p_part: pid, p_answer: ans });
+    state.feedback[pid] = r.result;
+    if (r.result && !r.result.invalid) delete state.pending[pid];
+    replacePart(r.part);
+  } catch (e) {
+    if (e.message === "__handled") return;
+    state.feedback[pid] = { invalid: true, msg: esc(e.message) };
+  }
+  state.confirm = null;
+  rerenderPart(pid);
+}
+
+async function takeHint(pid) {
+  const el = app.querySelector(`[data-part="${pid}"]`);
+  const keep = collect(findPart(pid), el); state.pending[pid] = keep;
+  try {
+    const r = await rpc("aps_hint", { p_token: state.token, p_part: pid });
+    replacePart(r.part);
+  } catch (e) {
+    if (e.message === "__handled") return;
+    state.feedback[pid] = { invalid: true, msg: esc(e.message) };
+  }
+  state.confirm = null;
+  rerenderPart(pid);
+}
+
+// ---------------- START ----------------
+state.token ? showList() : (store.get(SECTION_KEY) ? showNames(store.get(SECTION_KEY)) : showLogin());
+</script>
+</body>
+</html>
