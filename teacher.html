@@ -65,6 +65,11 @@
   .seg button{background:#fff;border:none;padding:6px 12px;font-weight:700;color:var(--blue-dk)}
   .seg button.on{background:var(--blue-dk);color:#fff}
   .grp{background:#FAFCFE}
+  .lchips{display:flex;flex-wrap:wrap;gap:6px}
+  .lchip{display:inline-flex;align-items:center;gap:5px;border:1.5px solid var(--line);border-radius:99px;padding:3px 10px;font-weight:700;font-size:.88rem;cursor:pointer;background:#fff}
+  .lchip input{margin:0} .lchip.on{border-color:var(--blue);background:var(--blue-lt);color:var(--blue-dk)} .lchip.other{opacity:.45}
+  table.sched td{vertical-align:top}
+  details.card summary{cursor:pointer}
   .wa{background:#FAFCFE;font-size:.9rem}
   .wa code{background:#EEF3F7;border-radius:5px;padding:1px 6px}
   .slips{display:none}
@@ -407,24 +412,64 @@ function paceGuess(a, groups) {   // which calendar lesson a platform lesson mat
   return "";
 }
 
+// One schedule for all four sections: each grade group (or ungrouped lesson) has one Opens date and one Due date.
 function renderSchedule() {
   const up = unitPicker();
   const as = S.data.assignments.filter(a => a.unit === S.unit);
-  const groups = ["A", "B"].map(day => ({ day, secs: secsOfDay(day) })).filter(g => g.secs.length);
-  const testFor = (g) => { const t = S.data.unit_tests.find(u => u.unit === S.unit && u.section === g.secs[0]); return t ? t.date : ""; };
-  // grade-group draft for this unit (saved with the Save button)
+  const allSecs = S.data.sections.map(x => x.id);
+  const ref = a => a.dates[allSecs[0]] || Object.values(a.dates)[0];
+  const differs = a => allSecs.some(x => JSON.stringify(a.dates[x] || null) !== JSON.stringify(ref(a) || null));
+  const tests = S.data.unit_tests.filter(u => u.unit === S.unit).map(u => u.date).sort();
   if (!S.gdraft || S.gdraft.unit !== S.unit) {
     const gs = S.data.groups.filter(g => g.unit === S.unit);
-    S.gdraft = { unit: S.unit, dirty: false, groups: gs.map(g => ({ key: "g" + g.id, id: g.id, name: g.name })),
-                 pick: Object.fromEntries(as.map(a => [a.id, a.group_id ? "g" + a.group_id : ""])) };
+    S.gdraft = { unit: S.unit, groups: gs.map(g => ({ key: "g" + g.id, id: g.id, name: g.name })),
+                 pick: Object.fromEntries(as.map(a => [a.id, a.group_id ? "g" + a.group_id : ""])),
+                 dates: {}, test: tests[tests.length - 1] || "", dirty: false };
   }
-  const G = S.gdraft, plist = paceLessons(S.unit);
-  const gOpts = sel => `<option value="">— own grade —</option>` + G.groups.map(g => `<option value="${g.key}" ${g.key === sel ? "selected" : ""}>${esc(g.name || "(unnamed)")}</option>`).join("");
+  const G = S.gdraft;
+  // Rows: grade groups in lesson order, then lessons with their own grade
+  const rows = [];
+  for (const g of G.groups) rows.push({ key: g.key, group: g, lessons: as.filter(a => G.pick[a.id] === g.key) });
+  for (const a of as) if (!G.pick[a.id]) rows.push({ key: a.id, lessons: [a] });
+  rows.sort((x, y) => (x.lessons[0] ? x.lessons[0].sort : 1e9) - (y.lessons[0] ? y.lessons[0].sort : 1e9));
+  for (const r of rows) if (!G.dates[r.key]) {   // starting values from what's saved
+    const ds = r.lessons.map(ref).filter(Boolean);
+    G.dates[r.key] = { opens: ds.length ? localDay(ds.map(d => d.opens).sort()[0]) : "", due: ds.length ? localDay(ds.map(d => d.due).sort().pop()) : "" };
+  }
+  const closesTxt = r => { const ds = r.lessons.map(ref).filter(Boolean); return ds.length ? "closes " + fmtD(ds.map(d => d.closes).sort().pop()) : "not scheduled"; };
+  const plist = paceLessons(S.unit);
+  const lessonChips = r => as.map(a => {
+    const mine = G.pick[a.id] === r.key, other = G.pick[a.id] && !mine;
+    return `<label class="lchip ${mine ? "on" : ""} ${other ? "other" : ""}" title="${esc(a.title)}${other ? " (in another group; checking moves it here)" : ""}"><input type="checkbox" data-lg="${r.key}" data-l="${a.id}" ${mine ? "checked" : ""}>${esc(shortLabel(a))}</label>`; }).join("");
   app.innerHTML = `
     <div class="row" style="justify-content:space-between"><div><h1>Schedule</h1>
-      <p class="sub">Enter the day you teach each lesson, or fill it from your pacing calendar. Homework opens at 7:00 AM that day and is due at <b>7:00 AM on the next class day</b>. For lessons in a grade group, late penalties start only after the group's <b>last</b> lesson is due.</p></div>
+      <p class="sub">One schedule for all sections (${allSecs.join(", ")}). Each grade group opens at <b>7:00 AM</b> on its open date and is due at <b>7:00 AM</b> on its due date. Late penalties start after the due date.</p></div>
       <div class="row">${up}<button class="btn alt" id="rf">↻ Refresh</button></div></div>
-    <div class="card">
+
+    <div class="card scroll" style="padding:0"><table class="t sched">
+      <tr><th>Grade</th><th>Lessons</th><th>Opens</th><th>Due 7 AM</th><th></th></tr>
+      ${rows.map(r => `<tr>
+        <td>${r.group ? `<input type="text" data-gname="${r.key}" value="${esc(r.group.name)}" style="min-width:210px">`
+                      : `<b>${esc(shortLabel(r.lessons[0]))}</b> <span class="mutedtxt">${esc(r.lessons[0].title.replace(/^.*?:\s*/, ""))}</span><div class="mutedtxt">own grade</div>`}</td>
+        <td>${r.group ? `<div class="lchips">${lessonChips(r)}</div>${r.lessons.length ? "" : `<div class="mutedtxt">Check the lessons in this group.</div>`}` : ""}</td>
+        <td><input type="date" data-d="${r.key}" data-k="opens" value="${G.dates[r.key].opens}"></td>
+        <td><input type="date" data-d="${r.key}" data-k="due" value="${G.dates[r.key].due}"></td>
+        <td class="mutedtxt">${closesTxt(r)}${r.lessons.some(differs) ? `<br><span class="bad" style="font-weight:600">A/B dates differ; saving makes them match</span>` : ""}
+          ${r.group ? `<br><button class="btn warn sm" data-gdel="${r.key}" style="margin-top:4px">Delete group</button>` : ""}</td></tr>`).join("")}
+      <tr class="grp"><td><b>Unit ${esc(S.unit)} test</b></td><td class="mutedtxt">Homework closes 10 school days after the test (11:59 PM).</td>
+        <td colspan="2"><input type="date" id="utest" value="${G.test}"></td><td></td></tr>
+    </table></div>
+    <div class="row" style="margin-bottom:6px">
+      <button class="btn" id="save">Save schedule</button>
+      <button class="btn alt" id="gadd">＋ Add grade group</button>
+      ${PACE.length ? `<button class="btn alt" id="fill">📅 Fill dates from pacing calendar</button>` : ""}
+      <span class="mutedtxt" id="dirty">${G.dirty ? "Unsaved changes" : ""}</span></div>
+    ${PACE.length ? `<details class="card" style="margin-top:12px"><summary><b>Pacing calendar matches</b> <span class="mutedtxt">(which calendar lesson each homework lesson goes with; used by "Fill dates")</span></summary>
+      <div class="row" style="margin-top:10px">${as.map(a => `<label class="row" style="gap:6px;margin:4px 12px 4px 0"><b>${esc(shortLabel(a))}</b>
+        <select data-pace="${a.id}"><option value="">—</option>${plist.map(p => `<option value="${p.code}" ${p.code === paceGuess(a, [{ day: "A", secs: [allSecs[0]] }]) ? "selected" : ""}>${esc(p.topic)}</option>`).join("")}</select></label>`).join("")}</div>
+      <p class="mutedtxt">Fill sets each group to open on the A-day its first lesson is taught and to be due at 7 AM on the B-day class after its last lesson, so both day groups have had it. It also sets the unit test to the B-day test date.</p></details>` : ""}
+
+    <div class="card" style="margin-top:12px">
       <h2>Study Hub for Unit ${esc(S.unit)}</h2>
       <p class="mutedtxt" style="margin-top:-6px">After 2 wrong tries on a question, students see a link to this page (it opens in a new tab and doesn't use a try). Leave blank to hide the link for this unit.</p>
       <div class="row"><input type="text" id="hubu" style="min-width:420px;flex:1" placeholder="https://matthewcrouch-cms.github.io/…" value="${esc((S.data.hubs.find(h => h.unit === S.unit) || {}).url || "")}">
@@ -432,106 +477,86 @@ function renderSchedule() {
         <button class="btn alt" id="hubs">Save link</button>${(S.data.hubs.find(h => h.unit === S.unit) || {}).url ? `<a class="btn alt" style="text-decoration:none" target="_blank" rel="noopener" href="${esc(S.data.hubs.find(h => h.unit === S.unit).url)}">Test ↗</a>` : ""}</div>
     </div>
     <div class="card">
-      <h2>Grade groups for Unit ${esc(S.unit)}</h2>
-      <p class="mutedtxt" style="margin-top:-6px">Each group becomes one gradebook/Canvas grade: the average of its lessons. Students still work and see each lesson separately. Pick each lesson's group in the table below.</p>
-      <div id="glist">${G.groups.map((g, i) => `<div class="row" style="margin:6px 0"><input type="text" data-gname="${i}" value="${esc(g.name)}" placeholder="e.g. U1a HW 1 (L1.1–1.3)" style="min-width:300px">
-        <span class="mutedtxt">${as.filter(a => G.pick[a.id] === g.key).map(shortLabel).join(", ") || "no lessons yet"}</span>
-        <button class="btn warn sm" data-gdel="${i}">Delete group</button></div>`).join("") || `<p class="mutedtxt">No grade groups yet; every lesson is its own grade.</p>`}</div>
-      <button class="btn alt sm" id="gadd">＋ Add grade group</button>
-    </div>
-    ${PACE.length ? `<div class="row" style="margin-bottom:10px"><button class="btn alt" id="fill">📅 Fill dates from pacing calendar</button>
-      <span class="mutedtxt">Uses the "Calendar" column to set taught dates, due dates (7 AM on that group's next class day) and the unit test date. Review, then Save.</span></div>` : ""}
-    <div class="card scroll" style="padding:0"><table class="t">
-      <tr><th>Lesson</th><th>Grade group</th>${PACE.length ? "<th>Calendar</th>" : ""}${groups.map(g => `<th class="grp">${g.day}-day (${g.secs.join(", ")})<br><span style="text-transform:none;font-weight:500">Taught · Due 7 AM · Closes</span></th>`).join("")}</tr>
-      ${as.map(a => { const guess = paceGuess(a, groups);
-        return `<tr><td><b>${esc(shortLabel(a))}</b> ${esc(a.title.replace(/^.*?:\s*/, ""))}</td>
-        <td><select data-gpick="${a.id}">${gOpts(G.pick[a.id])}</select></td>
-        ${PACE.length ? `<td><select data-pace="${a.id}"><option value="">—</option>${plist.map(p => `<option value="${p.code}" ${p.code === guess ? "selected" : ""}>${esc(p.topic)}</option>`).join("")}</select></td>` : ""}
-        ${groups.map(g => { const d = a.dates[g.secs[0]];
-          const mixed = g.secs.some(s => JSON.stringify(a.dates[s] || null) !== JSON.stringify(d || null));
-          return `<td class="grp"><div class="row" style="gap:6px">
-            <input type="date" data-a="${a.id}" data-g="${g.day}" data-k="taught" value="${d ? localDay(d.opens) : ""}" title="Taught">
-            <input type="date" data-a="${a.id}" data-g="${g.day}" data-k="due" value="${d ? localDay(d.due) : ""}" title="Due 7:00 AM">
-            <span class="mutedtxt">${d ? "closes " + fmtD(d.closes) : "not scheduled"}${mixed ? " · sections differ" : ""}</span></div></td>`; }).join("")}</tr>`; }).join("")}
-      <tr><td><b>Unit ${esc(S.unit)} test</b><div class="mutedtxt">Homework closes 10 school days after the test (11:59 PM).</div></td><td></td>${PACE.length ? "<td></td>" : ""}
-        ${groups.map(g => `<td class="grp"><input type="date" data-test="${g.day}" value="${testFor(g)}"></td>`).join("")}</tr>
-    </table></div>
-    <div class="row"><button class="btn" id="save">Save schedule</button><span class="mutedtxt" id="dirty">${G.dirty ? "Grade groups changed (unsaved)" : ""}</span></div>
-    <div class="card" style="margin-top:18px">
       <h2>Days with no school</h2>
-      <p class="mutedtxt" style="margin-top:-6px">These are skipped when counting school days for due dates, late penalties, and closing dates. Preloaded from the CMS 2026-27 calendar and your pacing calendar; add weather days here.</p>
+      <p class="mutedtxt" style="margin-top:-6px">Skipped when counting school days for late penalties and closing dates. Preloaded from the CMS 2026-27 calendar and your pacing calendar; add weather days here.</p>
       <div class="row" style="margin-bottom:10px"><input type="date" id="nsd"><input type="text" id="nsn" placeholder="Note (optional)"><button class="btn alt" id="nsa">Add day</button></div>
       <div class="row">${S.data.no_school.map(n => `<span class="tag sec" style="font-size:.85rem;padding:4px 10px">${fmtD(n.day + "T12:00")}${n.note ? " · " + esc(n.note) : ""}
         <button class="x" style="font-size:1rem" data-ns="${n.day}" title="Remove">×</button></span>`).join("")}</div>
     </div>`;
+
+  const dirty = () => { G.dirty = true; document.getElementById("dirty").textContent = "Unsaved changes"; };
   document.getElementById("rf").onclick = () => { S.gdraft = null; refresh(); };
-  wireUnitPicker(renderSchedule);
-  const dirty = new Set();
-  const note = () => document.getElementById("dirty").textContent =
-    [dirty.size ? `${dirty.size} unsaved date change(s)` : "", G.dirty ? "grade groups changed" : ""].filter(Boolean).join(" · ");
-  const mark = el => { el.classList.add("dirty"); dirty.add(el.dataset.test ? "T" + el.dataset.test : el.dataset.a + "|" + el.dataset.g); note(); };
-  const setVal = (el, v) => { if (el && el.value !== v) { el.value = v; mark(el); } };
-  app.querySelectorAll("input[data-k=taught]").forEach(inp => inp.onchange = () => {
-    const due = app.querySelector(`input[data-a="${inp.dataset.a}"][data-g="${inp.dataset.g}"][data-k=due]`);
-    due.value = inp.value ? (nextClass(inp.value, inp.dataset.g) || addSchoolDays(inp.value, 2)) : "";
-    mark(inp); mark(due);
+  wireUnitPicker(() => { S.gdraft = null; renderSchedule(); });
+  app.querySelectorAll("[data-d]").forEach(inp => inp.onchange = () => { G.dates[inp.dataset.d][inp.dataset.k] = inp.value; inp.classList.add("dirty"); dirty(); });
+  document.getElementById("utest").onchange = e => { G.test = e.target.value; e.target.classList.add("dirty"); dirty(); };
+  app.querySelectorAll("[data-gname]").forEach(inp => inp.oninput = () => { G.groups.find(g => g.key === inp.dataset.gname).name = inp.value; dirty(); });
+  app.querySelectorAll("[data-lg]").forEach(cb => cb.onchange = () => {
+    const a = cb.dataset.l, k = cb.dataset.lg;
+    G.pick[a] = cb.checked ? k : "";
+    if (!cb.checked) delete G.dates[a];   // back to its own row, starting from its saved dates
+    const gd = G.dates[k];                 // a group with no dates yet starts from its lessons' saved dates
+    if (cb.checked && gd && !gd.opens && !gd.due) {
+      const ds = as.filter(x => G.pick[x.id] === k).map(ref).filter(Boolean);
+      if (ds.length) { gd.opens = localDay(ds.map(d => d.opens).sort()[0]); gd.due = localDay(ds.map(d => d.due).sort().pop()); }
+    }
+    G.dirty = true; renderSchedule();
   });
-  app.querySelectorAll("input[data-k=due], input[data-test]").forEach(inp => inp.onchange = () => mark(inp));
-  // grade groups (keep unsaved date edits by only re-rendering the group card when needed)
-  document.getElementById("hubs").onclick = async () => {
-    try { await rpc("aps_teacher_set_hub", { p_password: S.pw, p_unit: S.unit, p_url: document.getElementById("hubu").value, p_label: document.getElementById("hubl").value });
-          await refresh(); alertBox("Study Hub link saved.", true); } catch (e) { alertBox(e.message); }
-  };
   document.getElementById("gadd").onclick = () => {
-    if (dirty.size) return alertBox("Save your date changes first, then add groups.");
-    const n = G.groups.length + 1; G.groups.push({ key: "n" + Date.now(), id: null, name: `U${S.unit} HW ${n}` }); G.dirty = true; renderSchedule(); };
+    const key = "n" + Date.now();
+    G.groups.push({ key, id: null, name: `U${S.unit} HW ${G.groups.length + 1}` });
+    G.dates[key] = { opens: "", due: "" }; G.dirty = true; renderSchedule();
+  };
   app.querySelectorAll("[data-gdel]").forEach(b => b.onclick = () => {
-    if (dirty.size) return alertBox("Save your date changes first.");
-    const g = G.groups.splice(+b.dataset.gdel, 1)[0];
-    for (const k in G.pick) if (G.pick[k] === g.key) G.pick[k] = "";
-    G.dirty = true; renderSchedule(); });
-  app.querySelectorAll("[data-gname]").forEach(inp => inp.oninput = () => { G.groups[+inp.dataset.gname].name = inp.value; G.dirty = true; note(); });
-  app.querySelectorAll("[data-gpick]").forEach(sel => sel.onchange = () => { G.pick[sel.dataset.gpick] = sel.value; G.dirty = true; note(); });
+    const k = b.dataset.gdel; G.groups = G.groups.filter(g => g.key !== k);
+    for (const a in G.pick) if (G.pick[a] === k) { G.pick[a] = ""; delete G.dates[a]; }
+    G.dirty = true; renderSchedule();
+  });
   const fill = document.getElementById("fill");
   if (fill) fill.onclick = () => {
+    const code = id => (app.querySelector(`[data-pace="${id}"]`) || {}).value;
     let n = 0;
-    app.querySelectorAll("[data-pace]").forEach(sel => { if (!sel.value) return; n++;
-      for (const g of groups) {
-        const t = paceDay(sel.value, g.day); if (!t) continue;
-        setVal(app.querySelector(`input[data-a="${sel.dataset.pace}"][data-g="${g.day}"][data-k=taught]`), t);
-        setVal(app.querySelector(`input[data-a="${sel.dataset.pace}"][data-g="${g.day}"][data-k=due]`), nextClass(t, g.day));
-      } });
-    for (const g of groups) {
-      const r = PACE.find(r => r.day === g.day && /test/i.test(r.topic) && (paceCode(r.topic) || "").split(".")[0] === paceUnit(S.unit));
-      if (r) setVal(app.querySelector(`input[data-test="${g.day}"]`), r.date);
+    for (const r of rows) {
+      const codes = r.lessons.map(a => code(a.id)).filter(Boolean); if (!codes.length) continue;
+      const opens = paceDay(codes[0], "A") || paceDay(codes[0], "B");
+      const lastB = paceDay(codes[codes.length - 1], "B") || paceDay(codes[codes.length - 1], "A");
+      const due = lastB ? (nextClass(lastB, "B") || nextClass(lastB, "A")) : "";
+      if (opens && due) { G.dates[r.key] = { opens, due }; n++; }
     }
-    alertBox(n ? `Filled dates for ${n} lesson(s) from the pacing calendar. Review them, then click Save schedule.` : "Pick a calendar lesson for at least one row first.", !!n);
+    const t = PACE.filter(r => /test/i.test(r.topic) && (paceCode(r.topic) || "").split(".")[0] === paceUnit(S.unit)).map(r => r.date).sort().pop();
+    if (t) G.test = t;
+    if (n || t) { G.dirty = true; renderSchedule(); }
+    alertBox(n ? `Filled dates for ${n} row(s) from the pacing calendar. Review them, then click Save schedule.` : "No calendar matches yet. Open “Pacing calendar matches” and pick a calendar lesson for each homework lesson.", !!n);
   };
   document.getElementById("save").onclick = async () => {
-    const btn = document.getElementById("save"); btn.disabled = true; btn.textContent = "Saving…";
+    const btn = document.getElementById("save");
+    for (const r of rows) {
+      const d = G.dates[r.key];
+      if (r.group && !r.group.name.trim()) return alertBox("Every grade group needs a name.");
+      if (!!d.opens !== !!d.due) return alertBox(`${r.group ? r.group.name : shortLabel(r.lessons[0])}: enter both an open date and a due date (or clear both).`);
+      if (d.opens && d.due < d.opens) return alertBox(`${r.group ? r.group.name : shortLabel(r.lessons[0])}: the due date is before the open date.`);
+    }
+    btn.disabled = true; btn.textContent = "Saving…";
     try {
-      if (G.dirty) {
-        if (G.groups.some(g => !g.name.trim())) throw new Error("Every grade group needs a name.");
-        await rpc("aps_teacher_set_groups", { p_password: S.pw, p_unit: S.unit,
-          p_groups: G.groups.map(g => ({ id: g.id, name: g.name.trim(), lessons: as.filter(a => G.pick[a.id] === g.key).map(a => a.id) })) });
-      }
-      for (const g of groups) {   // unit test first so closing dates are right
-        if (!dirty.has("T" + g.day)) continue;
-        const v = app.querySelector(`input[data-test="${g.day}"]`).value;
-        await rpc("aps_teacher_set_unit_test", { p_password: S.pw, p_unit: S.unit, p_sections: g.secs, p_test: v || null });
-      }
-      for (const key of dirty) {
-        if (key.startsWith("T")) continue;
-        const [aid, day] = key.split("|"); const g = groups.find(x => x.day === day);
-        const t = app.querySelector(`input[data-a="${aid}"][data-g="${day}"][data-k=taught]`).value;
-        const d = app.querySelector(`input[data-a="${aid}"][data-g="${day}"][data-k=due]`).value;
-        if (t && !d) throw new Error("Every taught date needs a due date.");
-        if (t && d < t) throw new Error("A due date is before its taught date.");
-        await rpc("aps_teacher_set_dates", { p_password: S.pw, p_assignment: aid, p_sections: g.secs,
-          p_opens: t ? at7(t) : null, p_due: t ? at7(d) : null });
+      await rpc("aps_teacher_set_groups", { p_password: S.pw, p_unit: S.unit,
+        p_groups: G.groups.map(g => ({ id: g.id, name: g.name.trim(), lessons: as.filter(a => G.pick[a.id] === g.key).map(a => a.id) })) });
+      if (G.test !== (tests[tests.length - 1] || "") || tests.length !== allSecs.length || new Set(tests).size > 1)
+        await rpc("aps_teacher_set_unit_test", { p_password: S.pw, p_unit: S.unit, p_sections: allSecs, p_test: G.test || null });
+      for (const r of rows) {
+        const d = G.dates[r.key];
+        for (const a of r.lessons) {
+          const cur = ref(a);
+          const same = !differs(a) && (cur ? localDay(cur.opens) === d.opens && localDay(cur.due) === d.due : !d.opens);
+          if (same) continue;
+          await rpc("aps_teacher_set_dates", { p_password: S.pw, p_assignment: a.id, p_sections: allSecs,
+            p_opens: d.opens ? at7(d.opens) : null, p_due: d.opens ? at7(d.due) : null });
+        }
       }
       S.gdraft = null; await refresh(); alertBox("Schedule saved.", true);
     } catch (e) { btn.disabled = false; btn.textContent = "Save schedule"; alertBox(e.message); }
+  };
+  document.getElementById("hubs").onclick = async () => {
+    try { await rpc("aps_teacher_set_hub", { p_password: S.pw, p_unit: S.unit, p_url: document.getElementById("hubu").value, p_label: document.getElementById("hubl").value });
+          await refresh(); alertBox("Study Hub link saved.", true); } catch (e) { alertBox(e.message); }
   };
   document.getElementById("nsa").onclick = async () => {
     const d = document.getElementById("nsd").value; if (!d) return;
