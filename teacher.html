@@ -377,7 +377,25 @@ function renderInsights() {
     rpc("aps_teacher_wrong_answers", { p_password: S.pw, p_part: S.waPart }).then(list => {
       const el = document.getElementById("wa"); if (!el) return;
       el.innerHTML = `<div style="margin-bottom:6px"><b>${p.problem}${esc(p.label)}.</b> ${esc(plain(p.prompt)).slice(0, 220)}</div>` +
-        (list.length ? `<b>Most common wrong answers:</b> ` + list.map(w => `${showAns(w.answer, p)} ×${w.n}`).join(" &nbsp; ") : "No wrong answers yet.");
+        (list.length ? `<b>Most common wrong answers:</b> ` + list.map(w => `${showAns(w.answer, p)} ×${w.n}`).join(" &nbsp; ") : "No wrong answers yet.") +
+        `<div class="row" style="margin-top:10px;gap:8px">
+           <button class="btn alt sm" data-rs="rescore">↻ Re-score with current answer key</button>
+           <button class="btn warn sm" data-rs="credit">Give everyone full credit</button>
+           <span class="mutedtxt" id="rsmsg">If a key was wrong, fix it first (send me the correction), then re-score. Re-scoring also undoes “full credit.”</span></div>`;
+      el.querySelectorAll("[data-rs]").forEach(b => b.onclick = async ev => {
+        ev.stopPropagation();
+        const mode = b.dataset.rs;
+        const ask = mode === "credit"
+          ? "Give FULL credit on this question to every student in every section where this assignment is scheduled? (You can undo it later with Re-score.)"
+          : "Re-score this question for every student by replaying their saved answers against the current answer key?";
+        if (!confirm(ask)) return;
+        b.disabled = true;
+        try {
+          const r = await rpc("aps_teacher_rescore", { p_password: S.pw, p_part: p.id, p_mode: mode });
+          await refresh();
+          alertBox(mode === "credit" ? `Full credit given: ${r.changed} student score(s) changed.` : `Re-scored ${r.students} student(s); ${r.changed} score(s) changed.`, true);
+        } catch (e) { b.disabled = false; alertBox(e.message); }
+      });
     }).catch(e => { const el = document.getElementById("wa"); if (el) el.textContent = e.message; });
   }
 }
