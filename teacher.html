@@ -415,6 +415,12 @@ function paceGuess(a, groups) {   // which calendar lesson a platform lesson mat
 }
 
 // One schedule for all four sections: each grade group (or ungrouped lesson) has one Opens date and one Due date.
+function paceThroughGuess(a, from) {   // the calendar lesson whose next B-day class is this homework's saved due date
+  const d = Object.values(a.dates)[0]; if (!d || !from) return "";
+  const due = localDay(d.due), ls = paceLessons(a.unit), i = ls.findIndex(p => p.code === from);
+  for (const p of ls.slice(Math.max(0, i))) { const b = paceDay(p.code, "B"); if (b && nextClass(b, "B") === due) return p.code; }
+  return "";
+}
 function renderSchedule() {
   const up = unitPicker();
   const as = S.data.assignments.filter(a => a.unit === S.unit);
@@ -467,9 +473,12 @@ function renderSchedule() {
       ${PACE.length ? `<button class="btn alt" id="fill">📅 Fill dates from pacing calendar</button>` : ""}
       <span class="mutedtxt" id="dirty">${G.dirty ? "Unsaved changes" : ""}</span></div>
     ${PACE.length ? `<details class="card" style="margin-top:12px"><summary><b>Pacing calendar matches</b> <span class="mutedtxt">(which calendar lesson each homework lesson goes with; used by "Fill dates")</span></summary>
-      <div class="row" style="margin-top:10px">${as.map(a => `<label class="row" style="gap:6px;margin:4px 12px 4px 0"><b>${esc(shortLabel(a))}</b>
-        <select data-pace="${a.id}"><option value="">—</option>${plist.map(p => `<option value="${p.code}" ${p.code === paceGuess(a, [{ day: "A", secs: [allSecs[0]] }]) ? "selected" : ""}>${esc(p.topic)}</option>`).join("")}</select></label>`).join("")}</div>
-      <p class="mutedtxt">Fill sets each group to open on the A-day its first lesson is taught and to be due at 7 AM on the B-day class after its last lesson, so both day groups have had it. It also sets the unit test to the B-day test date.</p></details>` : ""}
+      <table class="t" style="margin-top:10px"><tr><th>Homework</th><th>Calendar lesson</th><th>through (optional)</th></tr>
+      ${as.map(a => { const g1 = paceGuess(a, [{ day: "A", secs: [allSecs[0]] }]), g2 = paceThroughGuess(a, g1);
+        const opts = sel => `<option value="">—</option>` + plist.map(p => `<option value="${p.code}" ${p.code === sel ? "selected" : ""}>${esc(p.topic)}</option>`).join("");
+        return `<tr><td><b>${esc(shortLabel(a))}</b> <span class="mutedtxt">${esc(a.title.replace(/^.*?:\s*/, ""))}</span></td>
+          <td><select data-pace="${a.id}">${opts(g1)}</select></td><td><select data-pace2="${a.id}">${opts(g2 && g2 !== g1 ? g2 : "")}</select></td></tr>`; }).join("")}</table>
+      <p class="mutedtxt">Use “through” when one homework covers several calendar lessons (for example, Part 1 = 1B.1 through 1B.2). Fill sets each row to open on the A-day of its first calendar lesson and to be due at 7 AM on the B-day class after its last one, so both day groups have had it. It also sets the unit test to the B-day test date.</p></details>` : ""}
 
     <div class="card" style="margin-top:12px">
       <h2>Study Hub for Unit ${esc(S.unit)}</h2>
@@ -515,10 +524,10 @@ function renderSchedule() {
   });
   const fill = document.getElementById("fill");
   if (fill) fill.onclick = () => {
-    const code = id => (app.querySelector(`[data-pace="${id}"]`) || {}).value;
+    const code = (id, k = "pace") => (app.querySelector(`[data-${k}="${id}"]`) || {}).value;
     let n = 0;
     for (const r of rows) {
-      const codes = r.lessons.map(a => code(a.id)).filter(Boolean); if (!codes.length) continue;
+      const codes = r.lessons.flatMap(a => [code(a.id), code(a.id, "pace2") || code(a.id)]).filter(Boolean); if (!codes.length) continue;
       const opens = paceDay(codes[0], "A") || paceDay(codes[0], "B");
       const lastB = paceDay(codes[codes.length - 1], "B") || paceDay(codes[codes.length - 1], "A");
       const due = lastB ? (nextClass(lastB, "B") || nextClass(lastB, "A")) : "";
