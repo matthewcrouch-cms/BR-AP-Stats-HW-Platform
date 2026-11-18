@@ -158,6 +158,10 @@
   .confirm .yes{background:var(--blue-dk);color:#fff} .confirm .no{background:#fff;color:var(--ink);border:1px solid var(--line)}
   .hint{margin:10px 0 0 40px;background:#F4F9FD;border-left:4px solid var(--blue);border-radius:6px;padding:9px 13px;font-size:.96rem}
   .hint b{color:var(--blue-dk)}
+  .hub{margin:10px 0 0 40px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;background:var(--orange-lt);border:1.5px solid #F7B98A;border-radius:10px;padding:10px 14px}
+  .hub.urgent{border-color:var(--orange);border-width:2px}
+  .hub a{background:var(--orange);color:#fff;text-decoration:none;font-weight:700;border-radius:9px;padding:7px 14px;white-space:nowrap}
+  @media (max-width:560px){ .hub{margin-left:0} }
   .fb{margin:12px 0 0 40px;border-radius:10px;padding:10px 14px;font-size:.96rem}
   .fb.bad{background:var(--bad-lt);color:#8E1C1C} .fb.good{background:var(--good-lt);color:#145C29}
   .fb.info{background:var(--warn-lt);color:var(--warn)} .fb.out{background:#F3F0F7;color:#3E2C63}
@@ -403,7 +407,8 @@ function renderAssignment() {
     ${a.status === "late" ? `<div class="banner">This assignment is late. Questions you finish now lose 2% for each school day past the due date.</div>` : ""}
     <details class="rules"><summary>How scoring works</summary><ul>
       <li>You get <b>5 tries</b> per question. Each wrong try takes off <b>5%</b> of that question.</li>
-      <li>Hints: Hint 1 costs <b>5%</b>, Hint 2 costs <b>10%</b>, Hint 3 costs <b>20%</b>. Only your biggest hint counts. They don't add up.</li>
+      <li>Hints: <b>Hint 1 is free.</b> Hint 2 costs <b>10%</b> and Hint 3 costs <b>20%</b>. Only your biggest hint counts. They don't add up.</li>
+      <li>Stuck after a couple of tries? Use the <b>Study Hub</b> link to review. It's free and doesn't use a try.</li>
       <li>If you get it right, you always keep at least <b>50%</b> of the question.</li>
       <li>If all 5 tries are wrong, the question scores 0 and you'll see the answer and an explanation.</li>
       <li>Late work loses <b>2%</b> per school day (a right answer still keeps at least 50%).</li>
@@ -449,6 +454,13 @@ function renderPart(p) {
       : `<div class="fb bad"><b>Not quite.</b> ${fb.msg || "Check your work and try again."}
            <div class="x">${left} ${left === 1 ? "try" : "tries"} left.${left <= 2 && p.hint_tier < p.hint_count ? " A hint might help." : ""}</div></div>`;
   }
+  // Struggling (2+ wrong tries on this question): point to the unit's Study Hub
+  const hub = state.assignment.hub_url;
+  if (hub && !locked && p.wrong >= 2) {
+    fbHtml += `<div class="hub ${left === 1 ? "urgent" : ""}">
+      <span>${left === 1 ? "<b>One try left.</b> Review this in the Study Hub before your last try." : "<b>Stuck?</b> Review this topic in the Study Hub. It's free and won't use a try."}</span>
+      <a href="${esc(hub)}" target="_blank" rel="noopener" data-hub="${p.id}">📚 Open ${esc(state.assignment.hub_label || "Study Hub")} ↗</a></div>`;
+  }
   const nextHint = p.hint_tier + 1;
   const showHintBtn = !locked && p.hint_tier < p.hint_count;
   const mp = maxPct(p);
@@ -461,12 +473,12 @@ function renderPart(p) {
     <div class="answer">${renderInput(p, locked, fb)}</div>
     ${p.hints.map((h, i) => `<div class="hint"><b>Hint ${i + 1}:</b> ${h}</div>`).join("")}
     ${state.confirm === p.id ? `<div class="confirm">
-        <span>Hint ${nextHint} costs ${p.hint_costs[nextHint - 1]}% of this question${p.hint_tier ? ` (it replaces your Hint ${p.hint_tier} cost, not adds to it)` : ""}. The most you could earn drops to <b>${maxPct(p, nextHint)}%</b>. Show it?</span>
+        <span>Hint ${nextHint} costs ${p.hint_costs[nextHint - 1]}% of this question${p.hint_tier && hintCost(p, p.hint_tier) ? ` (it replaces your Hint ${p.hint_tier} cost, not adds to it)` : ""}. The most you could earn drops to <b>${maxPct(p, nextHint)}%</b>. Show it?</span>
         <button class="yes" data-act="hint-yes">Show hint ${nextHint}</button><button class="no" data-act="hint-no">Cancel</button></div>` : ""}
     ${!locked ? `<div class="actions">
         <button class="check" data-act="check">Check</button>
         <span class="tries">Tries left: ${Array.from({length: p.max_attempts}, (_, i) => `<i class="${i < p.wrong ? "used" : ""}"></i>`).join("")}</span>
-        ${showHintBtn ? `<button class="hintbtn" data-act="hint">💡 Hint ${nextHint} (−${p.hint_costs[nextHint - 1]}%)</button>` : ""}
+        ${showHintBtn ? `<button class="hintbtn" data-act="hint">💡 Hint ${nextHint} ${p.hint_costs[nextHint - 1] ? `(−${p.hint_costs[nextHint - 1]}%)` : "(free)"}</button>` : ""}
         <span class="maxpct">Most you can earn now: ${mp}%</span>
       </div>` : ""}
     ${fbHtml}
@@ -618,6 +630,9 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") zoom.classLi
 
 function wire() {
   app.querySelectorAll("[data-calc]").forEach(b => b.onclick = openCalc);
+  // Log Study Hub opens so the teacher can see them in Question insights
+  app.querySelectorAll("[data-hub]").forEach(a => a.onclick = () => {
+    rpc("aps_hub_click", { p_token: state.token, p_part: a.dataset.hub }).catch(() => {}); });
   app.querySelectorAll("img.fig").forEach(im => im.onclick = () => {
     const z = zoom.querySelector("img"); z.src = im.src; z.alt = im.alt; zoom.classList.add("open"); });
   app.querySelectorAll(".part").forEach(el => {
@@ -661,7 +676,7 @@ function wire() {
     el.querySelectorAll("[data-act]").forEach(b => b.onclick = () => {
       const act = b.dataset.act;
       if (act === "check") check(pid);
-      if (act === "hint") { state.confirm = pid; rerenderPart(pid); }
+      if (act === "hint") { const pp = findPart(pid); if (pp && !pp.hint_costs[pp.hint_tier]) return takeHint(pid); state.confirm = pid; rerenderPart(pid); }
       if (act === "hint-no") { state.confirm = null; rerenderPart(pid); }
       if (act === "hint-yes") takeHint(pid);
     });
