@@ -154,8 +154,8 @@ function summary(student, a, sm) {
 const inSec = s => S.sec === "all" || s.section === S.sec;
 const activeStudents = () => S.data.students.filter(s => s.active && inSec(s));
 const units = () => [...new Set(S.data.assignments.map(a => a.unit))];
-const shortLabel = a => "L" + a.lesson;
-const shortTitle = a => `U${a.unit} L${a.lesson} HW: ` + a.title.replace(/^.*?:\s*/, "");
+const shortLabel = a => /^\d/.test(a.lesson) ? "L" + a.lesson : a.lesson;   // "L1.3" or "Review"
+const shortTitle = a => /^\d/.test(a.lesson) ? `U${a.unit} L${a.lesson} HW: ` + a.title.replace(/^.*?:\s*/, "") : a.title;
 const secsOfDay = d => S.data.sections.filter(s => s.day === d).map(s => s.id);
 function secPicker(id = "secpick") {
   return `<select id="${id}"><option value="all">All sections</option>${S.data.sections.map(s =>
@@ -407,6 +407,8 @@ const paceDay = (code, day) => (PACE.find(r => r.day === day && paceCode(r.topic
 const nextClass = (date, day) => (PACE.find(r => r.day === day && r.date > date) || {}).date || "";
 function paceGuess(a, groups) {   // which calendar lesson a platform lesson matches
   const direct = paceLessons(a.unit).find(p => p.code === paceUnit(a.lesson)); if (direct) return direct.code;
+  if (!/^\d/.test(a.lesson)) {   // e.g. "Review" → the unit's "1A.7 Review" calendar day
+    const named = paceLessons(a.unit).find(p => p.topic.toLowerCase().includes(String(a.lesson).toLowerCase())); if (named) return named.code; }
   for (const g of groups) { const d = a.dates[g.secs[0]]; if (!d) continue;
     const r = PACE.find(r => r.date === localDay(d.opens) && r.day === g.day); if (r && paceCode(r.topic)) return paceCode(r.topic); }
   return "";
