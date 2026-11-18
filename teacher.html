@@ -551,7 +551,7 @@ function renderSchedule() {
       const due = lastB ? (nextClass(lastB, "B") || nextClass(lastB, "A")) : "";
       if (opens && due) { G.dates[r.key] = { opens, due }; n++; }
     }
-    const t = PACE.filter(r => /test/i.test(r.topic) && (paceCode(r.topic) || "").split(".")[0] === paceUnit(S.unit)).map(r => r.date).sort().pop();
+    const t = PACE.filter(r => /test|assessment/i.test(r.topic) && (paceCode(r.topic) || "").split(".")[0] === paceUnit(S.unit)).map(r => r.date).sort().pop();
     if (t) G.test = t;
     if (n || t) { G.dirty = true; renderSchedule(); }
     alertBox(n ? `Filled dates for ${n} row(s) from the pacing calendar. Review them, then click Save schedule.` : "No calendar matches yet. Open “Pacing calendar matches” and pick a calendar lesson for each homework lesson.", !!n);
