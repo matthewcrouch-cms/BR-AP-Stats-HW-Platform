@@ -26,7 +26,10 @@
   .err{background:var(--bad-lt);color:var(--bad);padding:10px 14px;border-radius:10px;margin:12px 0;font-weight:600}
 
   /* Login */
-  .names{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+  .names{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+  .names button[hidden]{display:none}
+  .find{width:100%;max-width:360px;font-size:1.1rem;padding:11px 14px;border:2px solid var(--line);border-radius:12px;margin:0 0 14px;background:var(--card);color:var(--ink)}
+  .find:focus{outline:none;border-color:var(--blue)}
   .names button{background:var(--card);border:2px solid var(--line);border-radius:12px;padding:16px 10px;font-weight:700;font-size:1.02rem;color:var(--ink)}
   .names button:hover{border-color:var(--blue);background:var(--blue-lt)}
   .pinbox{max-width:340px;margin:10px auto 0;background:var(--card);border-radius:16px;padding:24px;box-shadow:0 4px 18px rgba(20,40,60,.08);text-align:center}
@@ -264,8 +267,22 @@ async function showNames(section, note) {
     <h1>Who are you?</h1>
     <p class="sub">Tap your name, then enter your 4-digit PIN.</p>
     ${note ? `<div class="banner">${esc(note)}</div>` : ""}
+    ${list.length > 8 ? `<input id="find" class="find" type="text" placeholder="Type your first name…" autocomplete="off" autocapitalize="words" spellcheck="false">` : ""}
     <div class="names">${list.map(s => `<button data-id="${s.id}">${esc(s.name)}</button>`).join("")}</div>
+    <p class="center" id="nomatch" hidden>No match. Check the spelling, or ask your teacher.</p>
     ${list.length ? "" : `<p class="center">No students in this class yet. Ask your teacher.</p>`}`;
+  // Type-to-filter: shows only names that start with what the student types (first or last name)
+  const find = document.getElementById("find");
+  if (find) {
+    const btns = [...app.querySelectorAll(".names button")];
+    find.oninput = () => {
+      const q = find.value.trim().toLowerCase(); let shown = 0;
+      btns.forEach(b => { const ok = !q || b.textContent.toLowerCase().split(/\s+/).some(w => w.startsWith(q)) || b.textContent.toLowerCase().startsWith(q);
+                          b.hidden = !ok; if (ok) shown++; });
+      document.getElementById("nomatch").hidden = shown > 0;
+    };
+    find.onkeydown = e => { if (e.key === "Enter") { const vis = btns.filter(b => !b.hidden); if (vis.length === 1) vis[0].click(); } };
+  }
   document.getElementById("chg").onclick = () => { store.del(SECTION_KEY); showLogin(); };
   app.querySelectorAll(".names button").forEach(b =>
     b.onclick = () => showPin(+b.dataset.id, b.textContent, section));
