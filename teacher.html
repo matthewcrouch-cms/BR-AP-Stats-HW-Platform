@@ -485,13 +485,18 @@ function dayRanges(starts, n) {
   const st = [1, ...starts];
   return st.map((f, k) => ({ n: k + 1, from: f, to: k + 1 < st.length ? st[k + 1] - 1 : n }));
 }
-// Suggested dates: spread the days over the B-day classes after the first lesson, ending on the due date
-function paceAims(firstCode, due, nDays) {
-  const b1 = paceDay(firstCode, "B") || paceDay(firstCode, "A"); if (!b1 || !due || !nDays) return [];
-  const list = PACE.filter(r => r.day === "B" && r.date > b1 && r.date <= due).map(r => r.date);
-  if (!list.length) return Array(nDays).fill(due);
-  return Array.from({ length: nDays }, (_, k) => list[Math.max(0, Math.ceil((k + 1) * list.length / nDays) - 1)]);
+// Suggested dates: Day k goes with the k-th calendar lesson in the assignment's range and the last day with the
+// last lesson (so a day that spans two lessons ends with the second). Each "finish by" date is the B-day class
+// after that lesson, matching how due dates work.
+function paceAims(firstCode, lastCode, nDays) {
+  const ls = paceLessons(PACE_UNIT(firstCode)).map(p => p.code);
+  const i = ls.indexOf(firstCode), j = Math.max(i, ls.indexOf(lastCode || firstCode));
+  if (i < 0 || !nDays) return [];
+  const range = ls.slice(i, j + 1);
+  const aim = code => { const b = paceDay(code, "B") || paceDay(code, "A"); return b ? (nextClass(b, "B") || nextClass(b, "A")) : ""; };
+  return Array.from({ length: nDays }, (_, k) => aim(k === nDays - 1 ? range[range.length - 1] : range[Math.min(k, range.length - 1)]));
 }
+const PACE_UNIT = code => String(code).split(".")[0];
 
 // One schedule for all of this teacher's sections: each assignment has one Opens date and one Due date,
 // plus optional days ("Day 1 · Questions 1–3") with a suggested finish-by date (no penalty).
@@ -547,7 +552,7 @@ function renderSchedule() {
         const opts = sel => `<option value="">—</option>` + plist.map(p => `<option value="${p.code}" ${p.code === sel ? "selected" : ""}>${esc(p.topic)}</option>`).join("");
         return `<tr><td><b>${esc(a.title)}</b></td>
           <td><select data-pace="${a.id}">${opts(g1)}</select></td><td><select data-pace2="${a.id}">${opts(g2 && g2 !== g1 ? g2 : "")}</select></td></tr>`; }).join("")}</table>
-      <p class="mutedtxt">Fill makes each assignment open on the A-day of its first calendar lesson and be due at 7 AM on the B-day class after its last one, so both day groups have had it. Days get suggested dates spread over the B-day classes in between (Day 1 = the class after the first lesson, and so on), ending on the due date. It also sets the unit test to the B-day test date.</p></details>` : ""}
+      <p class="mutedtxt">Fill makes each assignment open on the A-day of its first calendar lesson and be due at 7 AM on the B-day class after its last one, so both day groups have had it. Each day gets a suggested “finish by” date: the B-day class after its lesson (Day 1 = first lesson, Day 2 = second, …; the last day goes with the last lesson and lands on the due date). It also sets the unit test to the B-day test date.</p></details>` : ""}
 
     <div class="card" style="margin-top:12px">
       <h2>Study Hub for Unit ${esc(S.unit)}</h2>
@@ -582,7 +587,7 @@ function renderSchedule() {
       const due = lastB ? (nextClass(lastB, "B") || nextClass(lastB, "A")) : "";
       if (!opens || !due) continue;
       const r = G.rows[a.id]; r.opens = opens; r.due = due; n++;
-      const rs = rangesOf(a); if (rs && rs.length) r.targets = paceAims(first, due, rs.length);
+      const rs = rangesOf(a); if (rs && rs.length) r.targets = paceAims(first, last, rs.length);
     }
     const t = PACE.filter(r => /test|assessment/i.test(r.topic) && (paceCode(r.topic) || "").split(".")[0] === paceUnit(S.unit)).map(r => r.date).sort().pop();
     if (t) G.test = t;
