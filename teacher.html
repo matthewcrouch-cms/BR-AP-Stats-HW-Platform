@@ -151,7 +151,7 @@ function summary(student, a, sm) {
     if (st) { started++; score += Number(st.score); if (st.done) done++; if (st.late) late = Math.max(late, st.late); } }
   return { score: r1(score), done, late, started, total: a.parts.length };
 }
-const SL = id => { const x = S.data && S.data.sections.find(c => c.id === id); return x ? x.label : id; };   // section label
+const SL = id => { const x = S.data && S.data.sections.find(c => c.id === id); return x ? (x.label || x.id) : id; };   // section label
 const inSec = s => S.sec === "all" || s.section === S.sec;
 const activeStudents = () => S.data.students.filter(s => s.active && inSec(s));
 const units = () => [...new Set(S.data.assignments.map(a => a.unit))];
@@ -160,7 +160,7 @@ const shortTitle = a => /^\d/.test(a.lesson) ? `U${a.unit} L${a.lesson} HW: ` + 
 const secsOfDay = d => S.data.sections.filter(s => s.day === d).map(s => s.id);
 function secPicker(id = "secpick") {
   return `<select id="${id}"><option value="all">All sections</option>${S.data.sections.map(s =>
-    `<option value="${esc(s.id)}" ${S.sec === s.id ? "selected" : ""}>${esc(s.label)} (${esc(s.day)}-day)</option>`).join("")}</select>`;
+    `<option value="${esc(s.id)}" ${S.sec === s.id ? "selected" : ""}>${esc(s.label || s.id)} (${esc(s.day)}-day)</option>`).join("")}</select>`;
 }
 function wireSecPicker(cb) {
   const el = document.getElementById("secpick");
@@ -643,15 +643,15 @@ function parseNames(text) {
 
 function renderRoster() {
   const st = S.data.students.filter(inSec);
-  const secOpts = sel => S.data.sections.map(s => `<option value="${esc(s.id)}" ${s.id === sel ? "selected" : ""}>${esc(s.label)}</option>`).join("");
+  const secOpts = sel => S.data.sections.map(s => `<option value="${esc(s.id)}" ${s.id === sel ? "selected" : ""}>${esc(s.label || s.id)}</option>`).join("");
   app.innerHTML = `
     <div class="row" style="justify-content:space-between"><div><h1>Roster & PINs</h1>
     <p class="sub">Students pick their class, tap their name, and type their 4-digit PIN. Five wrong PINs lock that student out for 5 minutes.</p></div>
     <div class="row">${secPicker()}</div></div>
     <div class="card">
       <h2>Your class periods</h2>
-      <div class="row">${S.data.sections.map(c => `<span class="tag sec" style="font-size:.9rem;padding:5px 10px">${esc(c.label)} · ${esc(c.day)}-day
-        <button class="x" style="font-size:1rem" data-rmsec="${esc(c.label)}" title="Remove this class period (only when it has no students)">×</button></span>`).join("") || `<span class="mutedtxt">None yet. Add your first class period here.</span>`}</div>
+      <div class="row">${S.data.sections.map(c => `<span class="tag sec" style="font-size:.9rem;padding:5px 10px">${esc(c.label || c.id)} · ${esc(c.day)}-day
+        <button class="x" style="font-size:1rem" data-rmsec="${esc(c.label || c.id)}" title="Remove this class period (only when it has no students)">×</button></span>`).join("") || `<span class="mutedtxt">None yet. Add your first class period here.</span>`}</div>
       <div class="row" style="margin-top:10px"><input id="newsec" type="text" placeholder="e.g. 4B" style="width:90px">
         <select id="newday"><option value="A">A-day</option><option value="B">B-day</option></select>
         <button class="btn alt" id="addsecbtn">Add class period</button></div>
