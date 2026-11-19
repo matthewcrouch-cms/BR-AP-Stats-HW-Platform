@@ -57,6 +57,13 @@
   .chip{display:inline-block;font-size:.78rem;font-weight:700;padding:2px 9px;border-radius:99px;vertical-align:1px;margin-left:6px}
   .chip.open{background:var(--blue-lt);color:var(--blue-dk)} .chip.late{background:var(--orange-lt);color:#B34A00}
   .chip.closed{background:#EEF1F4;color:var(--muted)} .chip.upcoming{background:#EEF1F4;color:var(--muted)}
+  .dayhead{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin:22px 0 10px;padding:10px 14px;border-radius:12px;background:var(--blue-lt);border-left:5px solid var(--blue);scroll-margin-top:120px}
+  .dayhead b{font-size:1.1rem;color:var(--blue-dk)} .dayhead .dm{color:var(--muted);font-weight:600;font-size:.92rem}
+  .dayhead .dp{margin-left:auto;font-weight:700;font-size:.9rem;color:var(--muted)} .dayhead.done{border-left-color:var(--good)} .dayhead.done .dp{color:var(--good)}
+  .daynav{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 6px}
+  .daynav button{border:1.5px solid var(--line);background:var(--card);border-radius:99px;padding:5px 12px;font-weight:700;font-size:.88rem;color:var(--ink)}
+  .daynav button.cur{border-color:var(--blue);background:var(--blue-lt);color:var(--blue-dk)} .daynav button.ok{color:var(--good)}
+  .dayline{color:var(--blue-dk);font-weight:700;font-size:.92rem;margin-top:3px}
   .group{border:2px solid var(--blue);border-radius:16px;padding:12px;background:var(--blue-lt)}
   .ghead{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:2px 6px 10px}
   .ghead b{font-size:1.08rem;color:var(--blue-dk)} .ghead small{display:block;color:var(--muted);font-weight:600}
@@ -365,15 +372,25 @@ function dueLine(a) {
   if (a.status === "late") return `Was due ${fmtDate(a.penalty_due || a.due)} · −2% per school day late · closes ${fmtDate(a.closes)}`;
   if (isInf(a.due)) return "Open";
   if (pastTarget(a)) return `Target was ${fmtDate(a.due)} · ${isInf(a.penalty_due) ? "no late penalty yet" : `no late penalty until ${fmtDate(a.penalty_due)} at ${fmtTime(a.penalty_due)}`}`;
-  return `Due ${fmtDate(a.due)} at ${fmtTime(a.due)}${a.group_id && !isInf(a.penalty_due) && a.penalty_due !== a.due ? ` · late penalty starts after ${fmtDate(a.penalty_due)}` : ""}`;
+  return `Due ${fmtDate(a.due)} at ${fmtTime(a.due)}`;
+}
+// Days inside an assignment: a.days = [{n, from, to, target, parts, done}]
+const dayRange = d => d.to > d.from ? `Questions ${d.from}–${d.to}` : `Question ${d.from}`;
+const aimTxt = d => d.target ? `finish by ${fmtDate(d.target + "T12:00")}` : "";
+function curDay(days) { return (days || []).find(d => d.done < d.parts) || null; }
+function dayNow(a) {
+  if (!a.days || !a.days.length || a.status === "upcoming" || a.status === "closed") return "";
+  const d = curDay(a.days); if (!d) return "";
+  return `📅 Day ${d.n} of ${a.days.length}: ${dayRange(d)}${d.target ? " · " + aimTxt(d) : ""}`;
 }
 function acard(a) {
   return `<button class="acard" data-id="${a.id}" ${a.status === "upcoming" ? "disabled" : ""}>
         <div class="main">
           <div class="title">${esc(a.title)} ${statusChip(a)}</div>
           <div class="meta">${dueLine(a)}</div>
+          ${dayNow(a) ? `<div class="dayline">${dayNow(a)}</div>` : ""}
           <div class="bar"><i style="width:${a.parts ? (100 * a.done / a.parts) : 0}%"></i></div>
-          <div class="meta">${a.done} of ${a.parts} questions finished</div>
+          <div class="meta">${a.questions != null ? `${a.qdone} of ${a.questions}` : `${a.done} of ${a.parts}`} questions finished</div>
         </div>
         <div class="score"><b>${fmt(a.score)}</b><small>/ 100</small></div>
       </button>`;
@@ -388,24 +405,11 @@ async function showList() {
   who.innerHTML = `<span>${esc(d.name)}${d.is_test ? "" : ` · ${esc(d.section)}`}</span><button class="linkbtn" id="lo">Log out</button>`;
   document.getElementById("lo").onclick = logout;
   const list = [...d.assignments].sort((a, b) => (b.sort - a.sort));
-  // Lessons in the same grade group are shown together with their combined grade (average of the lessons)
-  const blocks = [], seen = {};
-  for (const a of list) {
-    if (!a.group_id) { blocks.push({ one: a }); continue; }
-    if (!seen[a.group_id]) { seen[a.group_id] = { name: a.group_name, items: [] }; blocks.push(seen[a.group_id]); }
-    seen[a.group_id].items.push(a);
-  }
   app.innerHTML = `
     ${d.is_test ? `<div class="banner">Teacher preview: you're the hidden Test Student. Every assignment is open, and nothing here counts.</div>` : ""}
     <h1>Your homework</h1>
-    <p class="sub">Each lesson is worth 100 points. Lessons in a group are averaged into one grade.</p>
-    <div class="alist">${blocks.map(b => b.one ? acard(b.one) : `
-      <div class="group">
-        <div class="ghead"><div><b>${esc(b.name)}</b><small>${b.items.length} lesson${b.items.length > 1 ? "s" : ""} · averaged into one grade</small></div>
-          <div class="gscore"><b>${fmt(b.items.reduce((t, a) => t + Number(a.score), 0) / b.items.length)}</b><small>/ 100</small></div></div>
-        <div class="alist">${b.items.map(acard).join("")}</div>
-      </div>`).join("") || `<p class="center">No homework yet.</p>`}
-    </div>`;
+    <p class="sub">Each assignment is worth 100 points. Longer assignments are split into days so you can work a little after each class.</p>
+    <div class="alist">${list.map(acard).join("") || `<p class="center">No homework yet.</p>`}</div>`;
   app.querySelectorAll(".acard").forEach(b => b.onclick = () => showAssignment(b.dataset.id));
 }
 
@@ -417,6 +421,8 @@ async function showAssignment(id) {
   state.pending = {}; state.confirm = null; state.feedback = {}; state.pick = {};
   renderAssignment();
   window.scrollTo(0, 0);
+  const cd = curDay(state.assignment.days);   // jump to the first day that isn't finished
+  if (cd && cd.n > 1 && state.assignment.status !== "closed") { const h = document.getElementById("day-" + cd.n); if (h) h.scrollIntoView(); }
 }
 
 function findPart(pid) {
@@ -433,7 +439,7 @@ function renderAssignment() {
   const closed = a.status === "closed";
   const sub = a.status === "late" ? `Late · was due ${fmtDate(a.penalty_due || a.due)} · closes ${fmtDate(a.closes)}`
             : closed ? `Closed ${fmtDate(a.closes)} · answers shown below`
-            : dueLine(a) + (a.group_name ? ` · ${esc(a.group_name)}` : "");
+            : dueLine(a);
   app.innerHTML = `
     <div class="topbar">
       <button class="back" id="back">← All homework</button>
@@ -450,9 +456,32 @@ function renderAssignment() {
       <li>Late work loses <b>2%</b> per school day (a right answer still keeps at least 50%).</li>
       <li>Homework is due at <b>7:00 AM</b> on your next class day.</li>
       <li>Tap <b>📈 Desmos</b> on any problem for the same calculator you'll use on the AP exam. Tap a graph to make it bigger.</li></ul></details>
-    ${a.problems.map(renderProblem).join("")}`;
+    ${a.days && a.days.length ? `<div class="daynav" id="daynav"></div>` : ""}
+    ${a.problems.map((pr, i) => dayHead(a, i + 1) + renderProblem(pr)).join("")}`;
   document.getElementById("back").onclick = showList;
+  updateDays();
   wire();
+}
+
+function dayHead(a, num) {
+  const d = (a.days || []).find(x => x.from === num); if (!d) return "";
+  return `<div class="dayhead" id="day-${d.n}" data-day="${d.n}"><b>Day ${d.n}</b><span class="dm">${dayRange(d)}${d.target ? " · " + aimTxt(d) : ""}</span><span class="dp"></span></div>`;
+}
+// Recount each day's progress from the parts on the page (after every answer)
+function updateDays() {
+  const a = state.assignment; if (!a.days || !a.days.length) return;
+  for (const d of a.days) {
+    const qs = a.problems.slice(d.from - 1, d.to), ps = qs.flatMap(pr => pr.parts);
+    d.parts = ps.length; d.done = ps.filter(p => p.done).length;
+    const qdone = qs.filter(pr => pr.parts.every(p => p.done)).length;
+    const h = app.querySelector(`.dayhead[data-day="${d.n}"]`);
+    if (h) { h.classList.toggle("done", d.done === d.parts); h.querySelector(".dp").textContent = d.done === d.parts ? "✓ Done" : `${qdone} of ${qs.length} questions done`; }
+  }
+  const nav = document.getElementById("daynav"), cur = curDay(a.days);
+  if (nav) {
+    nav.innerHTML = a.days.map(d => `<button data-go="${d.n}" class="${d.done === d.parts ? "ok" : ""} ${cur && cur.n === d.n ? "cur" : ""}">${d.done === d.parts ? "✓ " : ""}Day ${d.n}</button>`).join("");
+    nav.querySelectorAll("[data-go]").forEach(b => b.onclick = () => document.getElementById("day-" + b.dataset.go).scrollIntoView({ behavior: "smooth" }));
+  }
 }
 
 function renderProblem(pr) {
@@ -622,6 +651,7 @@ function rerenderPart(pid) {
   const tmp = document.createElement("div"); tmp.innerHTML = renderPart(findPart(pid));
   el.replaceWith(tmp.firstElementChild);
   document.getElementById("total").innerHTML = `${fmt(state.assignment.score)}<small>of 100</small>`;
+  updateDays();
   wire();
 }
 
