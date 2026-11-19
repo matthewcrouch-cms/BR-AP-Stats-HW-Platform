@@ -408,23 +408,42 @@ async function showList() {
   state.me = d;
   who.innerHTML = `<span>${esc(d.name)}${d.is_test ? "" : ` · ${esc(d.section)}`}</span><button class="linkbtn" id="lo">Log out</button>`;
   document.getElementById("lo").onclick = logout;
-  // Most pressing first: unfinished work (soonest due first, so late work leads), then finished work that's
-  // still open, then closed work tucked away. Assignments that haven't opened yet are hidden.
+  // Three sections by unit:
+  //   Current  = units we're in now (not past, with at least one assignment open)
+  //   Upcoming = later units (nothing open yet)
+  //   Past     = units we should be done with: the unit test date has passed, or (no test date) every
+  //              scheduled assignment's due date has passed
   const t = x => (!x || x === "infinity") ? Infinity : x === "-infinity" ? -Infinity : new Date(x).getTime();
+  const now = Date.now(), today = new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
   const complete = a => a.parts && a.done === a.parts;
-  const shown = d.assignments.filter(a => a.status !== "upcoming");
-  const todo = shown.filter(a => a.status !== "closed" && !complete(a))
-                    .sort((a, b) => (a.status === "late" ? 0 : 1) - (b.status === "late" ? 0 : 1) || t(a.due) - t(b.due) || a.sort - b.sort);
-  const finished = shown.filter(a => a.status !== "closed" && complete(a)).sort((a, b) => t(b.due) - t(a.due) || b.sort - a.sort);
-  const closed = shown.filter(a => a.status === "closed").sort((a, b) => t(b.closes) - t(a.closes) || b.sort - a.sort);
+  const tests = d.unit_tests || {};
+  const units = [];
+  for (const a of [...d.assignments].sort((x, y) => x.sort - y.sort)) {
+    let u = units.find(x => x.unit === a.unit); if (!u) units.push(u = { unit: a.unit, items: [] }); u.items.push(a); }
+  for (const u of units) {
+    u.past = !d.is_test && (tests[u.unit] ? tests[u.unit] < today : u.items.every(a => t(a.due) < now));
+    u.opened = u.items.some(a => a.status !== "upcoming");
+  }
+  let current = units.filter(u => !u.past && u.opened);
+  const notPast = units.filter(u => !u.past);
+  if (!current.length && notPast.length) current = [notPast[0]];
+  const upcoming = notPast.filter(u => !current.includes(u));
+  const past = units.filter(u => u.past).reverse();
+  const rank = a => a.status === "upcoming" ? 2 : complete(a) || a.status === "closed" ? 3 : a.status === "late" ? 0 : 1;
+  const order = (a, b) => rank(a) - rank(b) || (rank(a) === 2 ? t(a.opens) - t(b.opens) : rank(a) === 3 ? b.sort - a.sort : t(a.due) - t(b.due)) || a.sort - b.sort;
+  const cards = us => us.flatMap(u => u.items).sort(order).map(acard).join("");
+  const unitNames = us => us.map(u => "Unit " + esc(u.unit)).join(" & ");
+  const pastOpen = past.flatMap(u => u.items).filter(a => !complete(a) && (a.status === "open" || a.status === "late")).length;
   app.innerHTML = `
     ${d.is_test ? `<div class="banner">Teacher preview: you're the hidden Test Student. Every assignment is open, and nothing here counts.</div>` : ""}
     <h1>Your homework</h1>
     <p class="sub">Each assignment is worth 100 points. Longer assignments are split into days so you can work a little after each class.</p>
-    ${todo.length ? `<div class="alist">${todo.map(acard).join("")}</div>`
-                  : shown.length ? `<div class="banner good">🎉 You're all caught up! Nothing is due right now.</div>` : `<p class="center">No homework yet.</p>`}
-    ${finished.length ? `<h2 class="lhead">Finished</h2><div class="alist">${finished.map(acard).join("")}</div>` : ""}
-    ${closed.length ? `<details class="past"><summary>Closed homework (${closed.length})</summary><div class="alist">${closed.map(acard).join("")}</div></details>` : ""}`;
+    ${current.length ? `<h2 class="lhead">Current · ${unitNames(current)}</h2>
+      ${current.some(u => u.items.some(a => a.status !== "upcoming" && a.status !== "closed" && !complete(a))) ? "" : `<div class="banner good">🎉 You're all caught up on this unit!</div>`}
+      <div class="alist">${cards(current)}</div>` : `<p class="center">No homework yet.</p>`}
+    ${upcoming.length ? `<h2 class="lhead">Upcoming · ${unitNames(upcoming)}</h2><div class="alist">${cards(upcoming)}</div>` : ""}
+    ${past.length ? `<details class="past" ${pastOpen ? "open" : ""}><summary>Past · ${unitNames(past)}${pastOpen ? ` <span class="chip late">${pastOpen} still open</span>` : ""}</summary>
+      <div class="alist">${cards(past)}</div></details>` : ""}`;
   app.querySelectorAll(".acard").forEach(b => b.onclick = () => showAssignment(b.dataset.id));
 }
 
