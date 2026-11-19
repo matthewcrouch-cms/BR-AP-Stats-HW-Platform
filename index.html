@@ -210,7 +210,7 @@ const SUPABASE_URL = "https://hfanndrvacddqvrvgmqe.supabase.co";
 const SUPABASE_KEY = "sb_publishable_VElC8kqy_TL2yWPz7O33iQ_vQQaifXQ";
 // The College Board version of Desmos (same calculator students use on the AP exam in Bluebook)
 const DESMOS_URL = "https://www.desmos.com/testing/cb-sat-ap/graphing";
-const TOKEN_KEY = "aps_token", SECTION_KEY = "aps_section";
+const TOKEN_KEY = "aps_token", SECTION_KEY = "aps_section", LABEL_KEY = "aps_section_label", TEACHER_KEY = "aps_teacher";
 // ======================
 
 const app = document.getElementById("app");
@@ -242,18 +242,32 @@ async function rpc(fn, args = {}) {
 const state = { token: store.get(TOKEN_KEY), me: null, assignment: null, pending: {}, confirm: null, pick: {} };
 
 // ---------------- LOGIN ----------------
-async function showLogin(note) {
+async function showLogin(note, teacher) {
   who.innerHTML = "";
   app.innerHTML = `<div class="center">Loading classes…</div>`;
   let secs;
   try { secs = await rpc("aps_sections_list"); }
   catch (e) { app.innerHTML = `<div class="err">${esc(e.message)}</div>`; return; }
+  // More than one teacher: students pick their teacher first
+  const teachers = [...new Map(secs.filter(c => c.teacher_id != null).map(c => [c.teacher_id, c.teacher])).entries()];
+  if (teachers.length > 1 && teacher == null) {
+    app.innerHTML = `
+      <h1>Who is your AP Statistics teacher?</h1>
+      ${note ? `<div class="banner">${esc(note)}</div>` : ""}
+      <div class="sections">${teachers.map(([id, n]) => `<button data-t="${id}"><b style="font-size:1.25rem">${esc(n)}</b></button>`).join("")}</div>`;
+    app.querySelectorAll(".sections button").forEach(b => b.onclick = () => showLogin(note, +b.dataset.t));
+    return;
+  }
+  const mine = teacher == null ? secs : secs.filter(c => c.teacher_id === teacher);
   app.innerHTML = `
+    ${teachers.length > 1 ? `<button class="crumb" id="cht">← Change teacher (${esc(mine[0] ? mine[0].teacher : "")})</button>` : ""}
     <h1>Which class are you in?</h1>
     <p class="sub">Pick your AP Statistics class period.</p>
     ${note ? `<div class="banner">${esc(note)}</div>` : ""}
-    <div class="sections">${secs.map(c => `<button data-s="${esc(c.id)}"><b>${esc(c.id)}</b><small>${esc(c.day)}-day</small></button>`).join("")}</div>`;
-  app.querySelectorAll(".sections button").forEach(b => b.onclick = () => showNames(b.dataset.s, note));
+    <div class="sections">${mine.map(c => `<button data-s="${esc(c.id)}" data-l="${esc(c.label || c.id)}" data-t="${c.teacher_id ?? ""}"><b>${esc(c.label || c.id)}</b><small>${esc(c.day)}-day</small></button>`).join("")}</div>
+    ${mine.length ? "" : `<p class="center">No classes yet. Ask your teacher.</p>`}`;
+  const cht = document.getElementById("cht"); if (cht) cht.onclick = () => showLogin(note);
+  app.querySelectorAll(".sections button").forEach(b => b.onclick = () => { store.set(LABEL_KEY, b.dataset.l); store.set(TEACHER_KEY, b.dataset.t); showNames(b.dataset.s, note); });
 }
 
 async function showNames(section, note) {
@@ -263,7 +277,7 @@ async function showNames(section, note) {
   try { list = await rpc("aps_students_list", { p_section: section }); }
   catch (e) { app.innerHTML = `<div class="err">${esc(e.message)}</div>`; return; }
   app.innerHTML = `
-    <button class="crumb" id="chg">← Change class (${esc(section)})</button>
+    <button class="crumb" id="chg">← Change class (${esc(store.get(LABEL_KEY) || section)})</button>
     <h1>Who are you?</h1>
     <p class="sub">Tap your name, then enter your 4-digit PIN.</p>
     ${note ? `<div class="banner">${esc(note)}</div>` : ""}
@@ -283,7 +297,7 @@ async function showNames(section, note) {
     };
     find.onkeydown = e => { if (e.key === "Enter") { const vis = btns.filter(b => !b.hidden); if (vis.length === 1) vis[0].click(); } };
   }
-  document.getElementById("chg").onclick = () => { store.del(SECTION_KEY); showLogin(); };
+  document.getElementById("chg").onclick = () => { store.del(SECTION_KEY); const t = store.get(TEACHER_KEY); showLogin(undefined, t ? +t : undefined); };
   app.querySelectorAll(".names button").forEach(b =>
     b.onclick = () => showPin(+b.dataset.id, b.textContent, section));
 }
