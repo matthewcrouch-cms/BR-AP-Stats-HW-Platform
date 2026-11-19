@@ -795,8 +795,9 @@ function renderExport() {
         if (/points possible/i.test(name)) { out.push([...r.slice(0, idEnd + 1), ...maps.map(m => m.col === "new" ? "100" : r[+m.col])]); continue; }
         if (/^student, test$/i.test(name.trim())) continue;
         const [cl, cf = ""] = name.split(",").map(norm);
-        const s = studs.find(s => norm(s.last) === cl && (cf.startsWith(norm(s.first)) || norm(s.first).startsWith(cf.split(" ")[0] || "#")))
-               || studs.find(s => norm(s.last) === cl && studs.filter(x => norm(x.last) === cl).length === 1);
+        const s = studs.find(s => s.canvas_name && norm(s.canvas_name) === norm(name))   // Canvas name set for this student
+               || studs.find(s => !s.canvas_name && norm(s.last) === cl && (cf.startsWith(norm(s.first)) || norm(s.first).startsWith(cf.split(" ")[0] || "#")))
+               || studs.find(s => !s.canvas_name && norm(s.last) === cl && studs.filter(x => norm(x.last) === cl).length === 1);
         if (!s) { unmatchedCanvas.push(name); out.push([...r.slice(0, idEnd + 1), ...maps.map(() => "")]); continue; }
         matched.add(s.id);
         out.push([...r.slice(0, idEnd + 1), ...maps.map(m => val(s, m.a, sm))]);
