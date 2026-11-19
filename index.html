@@ -210,6 +210,7 @@ const SUPABASE_URL = "https://hfanndrvacddqvrvgmqe.supabase.co";
 const SUPABASE_KEY = "sb_publishable_VElC8kqy_TL2yWPz7O33iQ_vQQaifXQ";
 // The College Board version of Desmos (same calculator students use on the AP exam in Bluebook)
 const DESMOS_URL = "https://www.desmos.com/testing/cb-sat-ap/graphing";
+const URL_TEACHER = new URLSearchParams(location.search).get("t");
 const TOKEN_KEY = "aps_token", SECTION_KEY = "aps_section", LABEL_KEY = "aps_section_label", TEACHER_KEY = "aps_teacher";
 // ======================
 
@@ -250,6 +251,10 @@ async function showLogin(note, teacher) {
   catch (e) { app.innerHTML = `<div class="err">${esc(e.message)}</div>`; return; }
   // More than one teacher: students pick their teacher first
   const teachers = [...new Map(secs.filter(c => c.teacher_id != null).map(c => [c.teacher_id, c.teacher])).entries()];
+  // A teacher's own link (index.html?t=pratt) goes straight to that teacher's classes
+  const key = n => String(n || "").toLowerCase().replace(/^(mr|mrs|ms|miss|mx|dr)\.?\s+/, "").replace(/[^a-z0-9]/g, "");
+  const linked = URL_TEACHER ? teachers.find(([, n]) => key(n) === key(URL_TEACHER)) : null;
+  if (linked) teacher = linked[0];
   if (teachers.length > 1 && teacher == null) {
     app.innerHTML = `
       <h1>Who is your AP Statistics teacher?</h1>
@@ -260,9 +265,9 @@ async function showLogin(note, teacher) {
   }
   const mine = teacher == null ? secs : secs.filter(c => c.teacher_id === teacher);
   app.innerHTML = `
-    ${teachers.length > 1 ? `<button class="crumb" id="cht">← Change teacher (${esc(mine[0] ? mine[0].teacher : "")})</button>` : ""}
+    ${teachers.length > 1 && !linked ? `<button class="crumb" id="cht">← Change teacher (${esc(mine[0] ? mine[0].teacher : "")})</button>` : ""}
     <h1>Which class are you in?</h1>
-    <p class="sub">Pick your AP Statistics class period.</p>
+    <p class="sub">Pick your AP Statistics class period${linked ? " with " + esc(linked[1]) : ""}.</p>
     ${note ? `<div class="banner">${esc(note)}</div>` : ""}
     <div class="sections">${mine.map(c => `<button data-s="${esc(c.id)}" data-l="${esc(c.label || c.id)}" data-t="${c.teacher_id ?? ""}"><b>${esc(c.label || c.id)}</b><small>${esc(c.day)}-day</small></button>`).join("")}</div>
     ${mine.length ? "" : `<p class="center">No classes yet. Ask your teacher.</p>`}`;
