@@ -710,9 +710,7 @@ function renderRoster() {
     catch (e) { alertBox(e.message); }
   });
   document.getElementById("print").onclick = () => {
-    // Mr. Crouch's slips use his short link; other teachers' slips use their own teacher link
-    const me = S.data.me ? S.data.me.name : "", key = me.toLowerCase().replace(/^(mr|mrs|ms|miss|mx|dr)\.?\s+/, "").replace(/[^a-z0-9]/g, "");
-    const url = /crouch/i.test(me) ? "https://bit.ly/APStatsHW" : location.href.replace(/teacher\.html.*$/, "") + (key ? "?t=" + key : "");
+    const url = "https://bit.ly/APStatsHW";   // short link to the main student page (students pick their teacher)
     document.getElementById("slips").innerHTML = st.filter(s => s.active).map(s => `
       <div class="slip"><b>${esc(s.first)} ${esc(s.last)}</b> · AP Stats · ${esc(S.data.me ? S.data.me.name : "")} ${esc(SL(s.section))}<br>Homework PIN: <span class="pin">${esc(s.pin)}</span><br>
       <span style="font-size:12px">${esc(url)}<br>Keep this PIN private.</span></div>`).join("");
