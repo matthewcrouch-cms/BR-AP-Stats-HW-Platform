@@ -17,6 +17,9 @@
   header .brand{font-weight:800;font-size:1.15rem;letter-spacing:.2px}
   header .brand small{font-weight:600;opacity:.85;margin-left:6px}
   header .who{display:flex;align-items:center;gap:10px;font-weight:600}
+  header .hdr-r{display:flex;align-items:center;gap:14px}
+  header .helplink{color:#fff;font-weight:700;text-decoration:none;opacity:.92;white-space:nowrap} header .helplink:hover{text-decoration:underline}
+  @media (max-width:520px){ header .brand small{display:none} header{padding:10px 12px} header .hdr-r{gap:8px} }
   .linkbtn{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.45);color:#fff;border-radius:8px;padding:5px 12px}
   .linkbtn:hover{background:rgba(255,255,255,.3)}
   main{max-width:860px;margin:0 auto;padding:24px 16px 80px}
@@ -202,7 +205,7 @@
 <body>
 <header>
   <div class="brand">BR: AP Statistics <small>Homework</small></div>
-  <div class="who" id="who"></div>
+  <div class="hdr-r"><a class="helplink" href="help.html" target="_blank" rel="noopener" title="How this site works">❓ Help</a><div class="who" id="who"></div></div>
 </header>
 <main id="app"><div class="center">Loading…</div></main>
 <div id="calc" role="dialog" aria-label="Desmos graphing calculator">

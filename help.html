@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How AP Stats Homework Works</title>
+<style>
+  :root{
+    --blue:#4B9CD3; --blue-dk:#1F6FA8; --blue-lt:#EAF4FB; --orange:#F56600; --orange-lt:#FFF1E6;
+    --ink:#1B2733; --muted:#5B6B7A; --line:#DCE6EE; --bg:#F5F8FB; --card:#fff;
+    --good:#1E8E3E; --good-lt:#E7F5EB; --bad:#C62828; --bad-lt:#FDECEC; --warn:#9A5B00; --warn-lt:#FFF6DD;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:17px;line-height:1.55}
+  header{background:var(--blue);color:#fff;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:4px solid var(--orange)}
+  header .brand{font-weight:800;font-size:1.15rem}
+  header .brand small{font-weight:600;opacity:.85;margin-left:6px}
+  header a{color:#fff;font-weight:700;text-decoration:none;border:1.5px solid rgba(255,255,255,.7);border-radius:9px;padding:6px 12px;white-space:nowrap}
+  main{max-width:860px;margin:0 auto;padding:28px 16px 60px}
+  h1{font-size:1.9rem;margin:0 0 6px;line-height:1.2}
+  .lead{color:var(--muted);margin:0 0 22px;font-size:1.05rem}
+  .start{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;background:var(--card);border:2px solid var(--blue);border-radius:14px;padding:16px 18px;margin-bottom:22px}
+  .start b{font-size:1.05rem}
+  .start .url{font-size:1.35rem;font-weight:800;color:var(--blue-dk);text-decoration:none}
+  .toc{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 18px;margin-bottom:30px}
+  .toc ol{margin:6px 0 0;padding-left:22px;columns:2;column-gap:28px}
+  .toc a{color:var(--blue-dk);text-decoration:none;font-weight:600}
+  section{margin:0 0 40px;scroll-margin-top:16px}
+  h2{font-size:1.4rem;margin:0 0 12px;display:flex;align-items:center;gap:10px}
+  h2 .n{display:inline-grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--orange);color:#fff;font-size:1rem;flex:none}
+  h3{font-size:1.08rem;margin:20px 0 6px}
+  p{margin:0 0 10px}
+  ol.steps,ul{margin:0 0 12px;padding-left:24px} li{margin:4px 0}
+  figure{margin:12px 0 18px}
+  figure img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:12px;box-shadow:0 2px 10px rgba(27,39,51,.07);background:#fff}
+  figure.small img{max-width:560px}
+  figcaption{color:var(--muted);font-size:.92rem;margin-top:6px}
+  .tip,.warn,.good{border-radius:12px;padding:12px 16px;margin:12px 0}
+  .tip{background:var(--blue-lt);border-left:5px solid var(--blue)}
+  .warn{background:var(--orange-lt);border-left:5px solid var(--orange)}
+  .good{background:var(--good-lt);border-left:5px solid var(--good)}
+  table{border-collapse:collapse;width:100%;background:var(--card);border-radius:12px;overflow:hidden;border:1px solid var(--line);margin:8px 0 14px}
+  th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{background:var(--blue-lt);font-size:.95rem}
+  tr:last-child td{border-bottom:none}
+  .chip{display:inline-block;font-size:.82rem;font-weight:700;border-radius:99px;padding:2px 10px;white-space:nowrap}
+  .c-open{background:var(--blue-lt);color:var(--blue-dk)} .c-late{background:var(--orange-lt);color:#B34700}
+  .c-up{background:#EEF1F4;color:var(--muted)} .c-closed{background:#EEF1F4;color:var(--ink)} .c-done{background:var(--good-lt);color:var(--good)}
+  .faq dt{font-weight:700;margin-top:14px} .faq dd{margin:4px 0 0}
+  footer{color:var(--muted);text-align:center;font-size:.9rem;padding:10px 16px 30px}
+  @media (max-width:640px){ h1{font-size:1.5rem} .toc ol{columns:1} th,td{padding:8px} }
+  @media print{ header a,.toc{display:none} body{background:#fff} section{break-inside:avoid-page} figure img{box-shadow:none} }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">BR: AP Statistics <small>Homework Help</small></div>
+  <a href="./">Go to homework →</a>
+</header>
+<main>
+  <h1>How the AP Stats homework site works</h1>
+  <p class="lead">For students of Mr. Crouch and Mrs. Pratt. Everything you need to log in, do your homework, and get help when you're stuck.</p>
+
+  <div class="start"><b>Homework site:</b> <a class="url" href="https://bit.ly/APStatsHW">bit.ly/APStatsHW</a>
+    <span style="color:var(--muted)">Bookmark it on your Chromebook.</span></div>
+
+  <nav class="toc"><b>On this page</b>
+    <ol>
+      <li><a href="#login">Logging in</a></li>
+      <li><a href="#list">Your homework list</a></li>
+      <li><a href="#days">Days inside an assignment</a></li>
+      <li><a href="#answer">Answering questions</a></li>
+      <li><a href="#stuck">When you're stuck</a></li>
+      <li><a href="#points">Points and late work</a></li>
+      <li><a href="#faq">Problems? Start here</a></li>
+    </ol>
+  </nav>
+
+  <section id="login">
+    <h2><span class="n">1</span>Logging in</h2>
+    <ol class="steps">
+      <li>Go to <b>bit.ly/APStatsHW</b> and tap your teacher.</li>
+      <li>Tap your class period (for example, <b>1A</b>).</li>
+      <li>Tap your name. You can also start typing your first name to find it faster.</li>
+      <li>Type your <b>4-digit PIN</b>. Your teacher gave it to you on a slip of paper.</li>
+    </ol>
+    <figure><img src="img/help/teacher.webp" alt="Who is your AP Statistics teacher? Buttons for Mr. Crouch and Mrs. Pratt."></figure>
+    <figure><img src="img/help/name.webp" alt="A grid of student first names with last initials, and a box to type your first name."><figcaption>Names show as first name and last initial.</figcaption></figure>
+    <figure class="small"><img src="img/help/pin.webp" alt="PIN pad that says Hi, Ava A.! Enter your PIN."></figure>
+    <div class="tip">You'll stay logged in on your own Chromebook for about a month, so you won't need your PIN every day. On a shared computer, tap <b>Log out</b> when you're done.</div>
+    <div class="warn"><b>Keep your PIN private.</b> Anyone with your PIN can answer your homework as you. Five wrong PINs in a row locks your account for 5 minutes.</div>
+  </section>
+
+  <section id="list">
+    <h2><span class="n">2</span>Your homework list</h2>
+    <p>After you log in, you'll see your homework sorted into three groups:</p>
+    <ul>
+      <li><b>Current</b>: the unit we're working on now. Start here.</li>
+      <li><b>Upcoming</b>: assignments in the next unit. You can see when they open, but you can't start them yet.</li>
+      <li><b>Past</b>: units we've finished. Tap to open the list. If you still have late work you can turn in, it opens by itself.</li>
+    </ul>
+    <figure><img src="img/help/list.webp" alt="Homework list with Current Unit 2b, Upcoming Unit 5, and a collapsed Past section."></figure>
+    <table>
+      <tr><th>Label</th><th>What it means</th></tr>
+      <tr><td><span class="chip c-open">Open</span></td><td>You can work on it now. The due date is shown underneath.</td></tr>
+      <tr><td><span class="chip c-up">Not open yet</span></td><td>It opens on the date shown.</td></tr>
+      <tr><td><span class="chip c-late">Late</span></td><td>The due date passed, but you can still finish it for points (with a small late penalty) until it closes.</td></tr>
+      <tr><td><span class="chip c-closed">Closed</span></td><td>No more points, but you can open it to see the answers and explanations, which is great for studying.</td></tr>
+    </table>
+    <p>Your score for each assignment (out of 100) is on the right side of its card.</p>
+  </section>
+
+  <section id="days">
+    <h2><span class="n">3</span>Days inside an assignment</h2>
+    <p>Longer assignments cover several lessons, so they're split into <b>days</b>. Do each day's questions after that day's lesson. For example:</p>
+    <ul>
+      <li><b>Day 1</b> = Questions 1–6, after the first lesson</li>
+      <li><b>Day 2</b> = Questions 7–11, after the second lesson</li>
+    </ul>
+    <figure><img src="img/help/assignment.webp" alt="Inside an assignment: Day 1, Day 2, Day 3 buttons, and a Day 1 header that says Questions 1-6, finish by Fri 11/20, Done."></figure>
+    <ul>
+      <li>Tap <b>Day 1 / Day 2 / Day 3</b> at the top to jump to that day. The assignment opens to the first day you haven't finished.</li>
+      <li>"<b>Finish by</b>" dates are suggestions to keep you on pace. Only the assignment's <b>due date</b> counts for late points.</li>
+      <li>Your homework list shows which day you're on.</li>
+    </ul>
+    <div class="tip">Tap <b>How scoring works</b> at the top of any assignment for a quick reminder of the rules.</div>
+  </section>
+
+  <section id="answer">
+    <h2><span class="n">4</span>Answering questions</h2>
+    <p>Type your answer (or pick a choice), then tap <b>Check</b>. You find out right away if it's right.</p>
+    <figure><img src="img/help/question.webp" alt="A question with an answer box, a Check button, 5 tries left, a free Hint 1 button, and Most you can earn now: 100%."></figure>
+    <ul>
+      <li><b>Tries left:</b> you get <b>5 tries</b> per question. Each dot is one try.</li>
+      <li><b>Most you can earn now</b> shows the most you can still get on that question.</li>
+      <li><b>📈 Desmos calculator (AP version)</b> opens the same Desmos calculator you'll use on the AP exam, right on the page.</li>
+      <li>Your work saves every time you tap Check, so you can stop and come back later.</li>
+    </ul>
+    <h3>Follow the rounding directions</h3>
+    <p>If your answer is right but not rounded the way the question asks, you'll see "Almost!" and it <b>won't use a try</b>. Just fix the rounding and check again.</p>
+    <figure><img src="img/help/round.webp" alt="Almost! Round to 4 decimal places (you typed 2). This didn't use a try."></figure>
+    <h3>Wrong answers</h3>
+    <p>A wrong answer uses a try. Sometimes you'll get a message about a common mistake, like using the wrong tail of a distribution.</p>
+    <figure><img src="img/help/wrong.webp" alt="Not quite. Check your work and try again. 4 tries left."></figure>
+  </section>
+
+  <section id="stuck">
+    <h2><span class="n">5</span>When you're stuck</h2>
+    <h3>💡 Hints</h3>
+    <p>Each question has up to 3 hints, and each one gives a little more help.</p>
+    <table>
+      <tr><th>Hint</th><th>Cost</th></tr>
+      <tr><td>Hint 1</td><td><b>Free</b></td></tr>
+      <tr><td>Hint 2</td><td>−10% of that question</td></tr>
+      <tr><td>Hint 3</td><td>−20% of that question</td></tr>
+    </table>
+    <p>Only your biggest hint counts; hint costs don't add up. Before showing a hint that costs points, the site asks you to confirm.</p>
+    <figure><img src="img/help/hints.webp" alt="Hint 1 shown, then a box: Hint 2 costs 10% of this question. Show hint 2 or Cancel. Below it, the Study Hub link."></figure>
+    <h3>📚 Study Hub</h3>
+    <p>After <b>2 wrong tries</b> on a question, a link to the unit's <b>Study Hub</b> appears. It has notes and examples for the topic. Opening it is free and doesn't use a try.</p>
+    <h3>Out of tries</h3>
+    <p>If all 5 tries are wrong, that question scores 0, and you'll see the correct answer with an explanation so you can learn from it.</p>
+  </section>
+
+  <section id="points">
+    <h2><span class="n">6</span>Points and late work</h2>
+    <ul>
+      <li>Every assignment is worth <b>100 points</b>, split evenly among its questions.</li>
+      <li>Each question starts at 100%. Each wrong try takes off <b>5%</b>, and hints 2 and 3 cost what's shown above.</li>
+      <li>If you get a question right, you always keep <b>at least 50%</b> of its points.</li>
+      <li>Homework is due at <b>7:00 AM</b> on the due date.</li>
+      <li>Late work loses <b>2% per school day</b> (a right answer still keeps at least 50%).</li>
+      <li>Homework <b>closes</b> 10 school days after the unit test. After that you can still view it, but you can't earn points.</li>
+    </ul>
+    <figure><img src="img/help/correct.webp" alt="Correct! You earned 4.5 of 5 points (used hint 1, 2 wrong tries), with an explanation."><figcaption>When you get it right, you see your points and an explanation.</figcaption></figure>
+    <div class="good"><b>Best strategy:</b> do each day's questions after class, use the free Hint 1 and the Study Hub before guessing, and check your rounding.</div>
+  </section>
+
+  <section id="faq">
+    <h2><span class="n">7</span>Problems? Start here</h2>
+    <dl class="faq">
+      <dt>I forgot my PIN.</dt><dd>Ask your teacher. They can look it up or give you a new one.</dd>
+      <dt>It says I'm locked out.</dt><dd>Too many wrong PINs. Wait 5 minutes and try again, or ask your teacher to unlock you.</dd>
+      <dt>My name isn't on the list, or I'm in the wrong class.</dt><dd>Tap "← Change class" to make sure you picked the right teacher and class period. If your name still isn't there, tell your teacher.</dd>
+      <dt>The site logged me in as someone else.</dt><dd>Tap <b>Log out</b> in the top corner, then log in as yourself.</dd>
+      <dt>I think a question is marked wrong by mistake.</dt><dd>Tell your teacher which assignment and question. If the answer key needs a fix, they can re-score it for everyone.</dd>
+      <dt>I was absent or need more time.</dt><dd>Talk to your teacher. They can give you an extension.</dd>
+    </dl>
+  </section>
+</main>
+<footer>Ballantyne Ridge · AP Statistics · <a href="./">Back to homework</a></footer>
+</body>
+</html>
